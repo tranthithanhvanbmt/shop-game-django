@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import AccountInventory, NickOrder, GameCategory
-from minigame.models import Wheel
+from shop_game.minigame.models import Wheel
 
 
 def home_view(request):
