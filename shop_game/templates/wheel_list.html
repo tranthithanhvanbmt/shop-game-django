@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Danh sách Vòng quay{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-10">
+        <div class="card shadow-sm border-danger border-3 mb-4">
+            <div class="card-header bg-danger text-white fw-bold fs-5 text-uppercase">
+                Vòng quay may mắn
+            </div>
+            <div class="card-body">
+                {% if error_message %}
+                <div class="alert alert-warning">
+                    {{ error_message }}
+                </div>
+                {% endif %}
+
+                {% if wheels %}
+                    <div class="row g-3">
+                        {% for wheel in wheels %}
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body text-center">
+                                    <h5 class="fw-bold text-uppercase">{{ wheel.name }}</h5>
+                                    <p class="text-muted mb-2">Giá: {{ wheel.price }}đ / lượt</p>
+                                    <a href="{% url 'wheel_detail' wheel.id %}" class="btn btn-danger btn-sm w-100 fw-bold">Vào chơi</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        Hiện chưa có vòng quay nào. Vui lòng tạo vòng quay mới trong trang Admin.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

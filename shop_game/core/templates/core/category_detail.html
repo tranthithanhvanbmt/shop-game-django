@@ -1,0 +1,27 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ category.name }} - Danh sách nick{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Danh sách nick {{ category.name }}</h2>
+    <p>{{ category.description }}</p>
+    <div class="card-list">
+        <table>
+            <thead><tr><th>ID</th><th>Tên tài khoản</th><th>Rank</th><th>Giá</th><th>Trạng thái</th></tr></thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.username }}</td>
+                    <td>{{ item.rank }}</td>
+                    <td>{{ item.price|intcomma }}đ</td>
+                    <td>{{ item.get_status_display }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">Chưa có kho nick sẵn sàng</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

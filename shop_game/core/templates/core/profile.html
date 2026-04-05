@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% block title %}Hồ sơ cá nhân{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <div class="card">
+        <h2>Lịch sử mua nick</h2>
+        <div class="card-list">
+            <table>
+                <thead><tr><th>Mã đơn</th><th>Nick</th><th>Giá</th><th>Ngày</th><th>Trạng thái</th></tr></thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.account.username }}</td>
+                        <td>{{ order.price_paid|intcomma }}đ</td>
+                        <td>{{ order.created_at|date:'d/m/Y H:i' }}</td>
+                        <td>{{ order.status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Chưa có đơn mua nick</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card">
+        <h2>Lịch sử nạp thẻ</h2>
+        <div class="card-list">
+            <table>
+                <thead><tr><th>ID</th><th>Nhà mạng</th><th>Mệnh giá</th><th>Thực nhận</th><th>Trạng thái</th></tr></thead>
+                <tbody>
+                    {% for deposit in deposits %}
+                    <tr>
+                        <td>{{ deposit.id }}</td>
+                        <td>{{ deposit.provider.name }}</td>
+                        <td>{{ deposit.declared_value|intcomma }}đ</td>
+                        <td>{{ deposit.real_value|intcomma }}đ</td>
+                        <td>{{ deposit.status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Chưa có lịch sử nạp thẻ</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

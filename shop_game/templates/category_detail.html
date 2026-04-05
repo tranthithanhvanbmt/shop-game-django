@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Tài khoản {{ category.name }}{% endblock %}
+
+{% block content %}
+<h4 class="fw-bold mb-3 text-uppercase border-start border-danger border-4 ps-2">TÀI KHOẢN {{ category.name }}</h4>
+
+<div class="card shadow-sm mb-4 bg-light">
+    <div class="card-body">
+        <form method="GET" class="row g-2">
+            <div class="col-md-3">
+                <input type="text" name="search_id" class="form-control" placeholder="Mã số (Ví dụ: 12)" value="{{ search_id|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <select name="price" class="form-select">
+                    <option value="">-- Chọn tầm giá --</option>
+                    <option value="1" {% if price_filter == '1' %}selected{% endif %}>Dưới 50,000đ</option>
+                    <option value="2" {% if price_filter == '2' %}selected{% endif %}>50,000đ - 200,000đ</option>
+                    <option value="3" {% if price_filter == '3' %}selected{% endif %}>Trên 200,000đ</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="rank" class="form-control" placeholder="Rank (Ví dụ: Thách đấu)" value="{{ rank_filter|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger w-100 fw-bold">TÌM KIẾM</button>
+                    <a href="{% url 'category_detail' category.id %}" class="btn btn-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% for account in accounts %}
+    <div class="col-6 col-md-3">
+        <div class="card shadow-sm h-100">
+            {% if account.image_thumb %}
+                <img src="{{ account.image_thumb.url }}" class="card-img-top">
+            {% else %}
+                <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top">
+            {% endif %}
+            
+            <div class="card-body p-2 text-center d-flex flex-column">
+                <h6 class="text-danger fw-bold">Mã Số: #{{ account.id }}</h6>
+                <ul class="list-unstyled text-start small mb-2 ps-2 border-start border-2 border-warning">
+                    <li><b>Rank:</b> {{ account.rank }}</li>
+                    <li><b>Skin:</b> {{ account.details|default:'Chưa có thông tin' }}</li>
+                    <li><b>Đăng nhập:</b> {{ account.login_method }}</li>
+                </ul>
+                <h5 class="fw-bold text-success mt-auto">{{ account.price }}đ</h5>
+                <form action="{% url 'buy_account' account.id %}" method="POST" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold"
+                            onclick="return confirm('Bạn có chắc chắn muốn mua tài khoản #{{ account.id }} với giá {{ account.price }}đ không?');">
+                        <i class="fas fa-shopping-cart"></i> MUA NGAY
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center mt-5">
+        <h5 class="text-muted">Hiện chưa có tài khoản nào được bán trong mục này.</h5>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

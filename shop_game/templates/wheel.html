@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block title %}{{ wheel.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .wheel-container {
+        position: relative;
+        width: 100%;
+        max-width: 450px;
+        margin: 0 auto;
+        padding-top: 20px;
+        min-height: 520px;
+        z-index: 999;
+        overflow: visible;
+    }
+
+    .wheel-needle {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        z-index: 30;
+        filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
+    }
+
+    .wheel-display {
+        width: 100%;
+        height: 0;
+        padding-bottom: 100%;
+        border-radius: 50%;
+        border: 15px solid #FFD700;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        position: relative;
+        overflow: hidden;
+        transition: transform 5s cubic-bezier(0.2, 0, 0.2, 1);
+        transform: rotate(0deg);
+        z-index: 1;
+        background: conic-gradient(
+            #f39c12 0deg 45deg,   #e74c3c 45deg 90deg, 
+            #2ecc71 90deg 135deg, #3498db 135deg 180deg,
+            #9b59b6 180deg 225deg, #f1c40f 225deg 270deg,
+            #1abc9c 270deg 315deg, #e67e22 315deg 360deg
+        );
+    }
+
+    .wheel-center-btn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 110px;
+        height: 110px;
+        background-color: #f1c40f;
+        border: 5px solid #fff;
+        border-radius: 50%;
+        z-index: 1001;
+        cursor: pointer;
+        font-weight: bold;
+        color: #fff;
+        font-size: 20px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        display: flex; align-items: center; justify-content: center;
+        pointer-events: auto;
+    }
+    .wheel-center-btn:hover { background-color: #f39c12; transform: translate(-50%, -50%) scale(1.1); }
+    .wheel-center-btn:disabled { background-color: #bdc3c7; cursor: not_allowed; }
+</style>
+
+<div class="row justify-content-center text-center">
+    <div class="col-md-7 mb-4">
+        <div class="card shadow border-danger border-3 bg-dark p-3">
+            <h4 class="text-warning fw-bold mb-3 text-uppercase border-bottom border-warning pb-2">
+                {{ wheel.name }}
+            </h4>
+            
+            <div class="wheel-container">
+                <img src="https://i.imgur.com/G4Vz9qW.png" class="wheel-needle" alt="Needle">
+                <div id="wheel-display" class="wheel-display"></div>
+                <button id="btn-spin" class="wheel-center-btn" onclick="playSpin()">
+                    QUAY
+                </button>
+            </div>
+
+            <div id="spin-result" class="alert alert-info d-none fw-bold fs-5 mt-4"></div>
+            <div class="badge bg-danger p-2 fs-6 mt-3 text-dark fw-bold shadow">Giá: {{ wheel.price }}đ / Lượt</div>
+        </div>
+    </div>
+</div>
+
+<script>
+let isSpinning = false;
+let currentRotation = 0;
+
+function playSpin() {
+    if (isSpinning) return;
+    const wheel = document.getElementById('wheel-display');
+    const btn = document.getElementById('btn-spin');
+    const resultDiv = document.getElementById('spin-result');
+    
+    isSpinning = true;
+    btn.disabled = true;
+    btn.innerHTML = '...';
+    resultDiv.classList.add('d-none');
+
+    fetch("{% url 'spin_api' wheel.id %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json"
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            const prizeAngles = {
+                'Trúng 5,000đ': 22,
+                'Trúng 10,000đ': 67,
+                'Trúng 20,000đ': 112,
+                'Nổ Hũ 100,000đ': 337
+            };
+            const prizeAngle = prizeAngles[data.prize_name] || 0;
+            const extraSpins = 5 * 360;
+            const totalRotation = currentRotation + extraSpins + (360 - prizeAngle);
+            currentRotation = totalRotation;
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            setTimeout(() => {
+                isSpinning = false;
+                btn.disabled = false;
+                btn.innerHTML = 'QUAY';
+                resultDiv.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-danger');
+                resultDiv.classList.add('alert-success');
+                resultDiv.innerHTML = "🎉 " + data.msg;
+                const wallet = document.querySelector('.fa-wallet');
+                if (wallet && wallet.parentNode) {
+                    wallet.parentNode.innerHTML = '<i class="fas fa-wallet"></i> Số dư: ' + data.new_balance + 'đ';
+                }
+            }, 5000);
+        } else {
+            isSpinning = false;
+            btn.disabled = false;
+            btn.innerHTML = 'QUAY';
+            resultDiv.classList.remove('d-none', 'alert-info', 'alert-danger');
+            resultDiv.classList.add('alert-danger');
+            resultDiv.innerHTML = "❌ " + data.msg;
+        }
+    })
+    .catch(error => {
+        isSpinning = false;
+        btn.disabled = false;
+        btn.innerHTML = 'Lỗi!';
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}

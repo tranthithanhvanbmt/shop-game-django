@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}Trang cá nhân{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-danger text-white text-center fw-bold">
+                <i class="fas fa-user-circle fa-2x mb-2 d-block"></i>
+                {{ user.username }}
+                <div class="badge bg-warning text-dark mt-1">Số dư: {{ user.balance }}đ</div>
+            </div>
+            <div class="list-group list-group-flush" id="profile-menu" role="tablist">
+                <a class="list-group-item list-group-item-action active fw-bold" data-bs-toggle="list" href="#edit-info" role="tab">
+                    <i class="fas fa-user-edit me-2"></i> Sửa thông tin
+                </a>
+                <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#deposit-history" role="tab">
+                    <i class="fas fa-money-bill-wave me-2"></i> Lịch sử nạp tiền
+                </a>
+                <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#nick-history" role="tab">
+                    <i class="fas fa-gamepad me-2"></i> Lịch sử mua nick
+                </a>
+                <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#spin-history" role="tab">
+                    <i class="fas fa-dharmachakra me-2"></i> Lịch sử vòng quay
+                </a>
+                <a class="list-group-item list-group-item-action text-muted" href="#" onclick="alert('Tính năng đang phát triển!'); return false;">
+                    <i class="fas fa-store me-2"></i> Đăng bán nick (Sắp có)
+                </a>
+                <a class="list-group-item list-group-item-action text-muted" href="#" onclick="alert('Tính năng đang phát triển!'); return false;">
+                    <i class="fas fa-university me-2"></i> Tài khoản ngân hàng (Sắp có)
+                </a>
+                <a class="list-group-item list-group-item-action text-muted" href="#" onclick="alert('Tính năng đang phát triển!'); return false;">
+                    <i class="fas fa-hand-holding-usd me-2"></i> Rút tiền (Sắp có)
+                </a>
+                <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#change-password" role="tab">
+                    <i class="fas fa-key me-2"></i> Đổi mật khẩu
+                </a>
+                <a class="list-group-item list-group-item-action text-danger fw-bold" href="{% url 'logout' %}">
+                    <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card shadow-sm">
+            <div class="card-body tab-content" id="nav-tabContent">
+
+                <div class="tab-pane fade show active" id="edit-info" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-user-edit"></i> THÔNG TIN TÀI KHOẢN</h5>
+                    <form method="POST" action="{% url 'profile' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_info" value="1">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tên đăng nhập (Không thể đổi)</label>
+                                <input type="text" class="form-control bg-light" value="{{ user.username }}" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email liên hệ</label>
+                                <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tên</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-danger"><i class="fas fa-save"></i> Lưu thông tin</button>
+                    </form>
+                </div>
+
+                <div class="tab-pane fade" id="deposit-history" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-money-bill-wave"></i> LỊCH SỬ NẠP THẺ</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr><th>Thời gian</th><th>Nhà mạng</th><th>Mệnh giá</th><th>Mã thẻ</th><th>Trạng thái</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in deposits %}
+                                <tr>
+                                    <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ item.provider.name }}</td>
+                                    <td>{{ item.declared_value }}đ</td>
+                                    <td>{{ item.card_code }}</td>
+                                    <td>
+                                        {% if item.status == 'PENDING' %}<span class="badge bg-warning text-dark">Chờ duyệt</span>
+                                        {% elif item.status == 'SUCCESS' %}<span class="badge bg-success">Thành công</span>
+                                        {% else %}<span class="badge bg-danger">Thất bại</span>{% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-muted">Chưa có giao dịch nạp tiền.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="nick-history" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-gamepad"></i> TÀI KHOẢN ĐÃ MUA</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr><th>Mã SP</th><th>Tài khoản / Mật khẩu</th><th>Giá tiền</th><th>Ngày mua</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>#{{ order.account.id }}</td>
+                                    <td>
+                                        <div class="text-start">
+                                            <strong>TK:</strong> {{ order.account.username }}<br>
+                                            <strong>MK:</strong> <span class="text-danger">{{ order.account.password }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-danger fw-bold">{{ order.price_paid }}đ</td>
+                                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-muted">Bạn chưa mua tài khoản nào.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="spin-history" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-dharmachakra"></i> LỊCH SỬ VÒNG QUAY</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr><th>Thời gian</th><th>Tên vòng quay</th><th>Phần thưởng</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for spin in spins %}
+                                <tr>
+                                    <td>{{ spin.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td class="fw-bold">{{ spin.wheel.name }}</td>
+                                    <td class="text-danger fw-bold">{{ spin.prize_name }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-muted">Bạn chưa chơi vòng quay nào.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="change-password" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-key"></i> ĐỔI MẬT KHẨU</h5>
+                    <form method="POST" action="{% url 'profile' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="change_password" value="1">
+                        {% for field in password_form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-danger w-100 fw-bold"><i class="fas fa-save"></i> Lưu mật khẩu</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Shop Game{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" />
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin:0; background:#f5f6fa; color:#222; }
+        header { background:#fff; border-bottom:1px solid #dedede; padding:10px 20px; position:sticky; top:0; z-index:100; }
+        .container { max-width:1200px; margin:0 auto; }
+        .logo { float:left; font-weight:bold; color:#111; font-size:1.4em; text-decoration:none; }
+        nav { float:right; display:flex; align-items:center; gap:16px; }
+        .nav-link { text-decoration:none; color:#333; font-weight:600; }
+        .badge { padding:4px 10px; border-radius:12px; background:#1e88e5; color:#fff; font-size:.85rem; }
+        .hero {padding: 40px 0; background: #fff;}
+        .footer {background:#111; color:#fff; padding:20px 0; margin-top:40px;}
+        .footer a {color:#fff; text-decoration:none;}
+        .grid-2 {display:grid; grid-template-columns:1fr 2fr; gap:20px;}
+        .card {background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px;}
+        .card h2 {margin-top:0;}
+        .form-group {margin-bottom:14px;}
+        label {font-weight:600; display:block; margin-bottom:6px;}
+        input, select {width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;}
+        button {background:#ff6b00; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;}
+        button:hover {opacity:.98;}
+        .swiper {position:relative;}
+        .slider {display:flex; overflow-x:auto; gap:12px; scroll-snap-type:x mandatory; padding-bottom:10px;}
+        .slider > div {min-width:320px; flex:0 0 auto; border-radius:10px; overflow:hidden; scroll-snap-align:start; grid-column:span 1;}
+        .slider img {width:100%; height:auto; display:block;}
+        .category-grid {display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+        .category-card {border:1px solid #ddd; border-radius:10px; overflow:hidden; background:#fff; cursor:pointer; transition:all .25s;}
+        .category-card:hover {box-shadow:0 8px 22px rgba(0,0,0,.12);}
+        .category-card img {width:100%; height:180px; object-fit:cover;}
+        .category-card .body {padding:14px; font-size:.95rem;}
+        .time {font-size:.85rem; color:#666;}
+        .cta {display:inline-block; margin-top:10px; color:#ff6b00; font-weight:700; text-decoration:none;}
+        .card-list {margin-top:20px;}
+        .card-list table {width:100%; border-collapse:collapse;}
+        .card-list th, .card-list td {padding:10px; border:1px solid #eee;}
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="container" style="display:flex; align-items:center; justify-content:space-between;">
+            <a class="logo" href="/">SHOPDH6</a>
+            <nav>
+                <a class="nav-link" href="/">Trang chủ</a>
+                <a class="nav-link" href="/profile/">Hồ sơ</a>
+                <a class="nav-link" href="/accounts/login/">Đăng nhập</a>
+                <span class="badge">Số dư: 0đ</span>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>© 2026 SHOPDH6 - Nền tảng bán nick & nạp thẻ</div>
+            <div>
+                <a href="#">Chính sách</a> | <a href="#">Liên hệ</a>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
