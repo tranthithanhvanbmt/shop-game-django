@@ -1,0 +1,1 @@
+# shop-game-django
