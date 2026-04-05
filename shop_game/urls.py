@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from shop_game.shop.views import home_view, category_detail_view, buy_account_view
+from shop.views import home_view, category_detail_view, buy_account_view
 
 urlpatterns = [
     path('quan-ly-bi-mat/', admin.site.urls),
@@ -28,9 +28,9 @@ urlpatterns = [
     path('buy/<int:account_id>/', buy_account_view, name='buy_account'),
     
     # Khai báo đường dẫn tới app accounts
-    path('auth/', include('shop_game.accounts.urls')),
-    path('billing/', include('shop_game.billing.urls')),
-    path('minigame/', include('shop_game.minigame.urls')),
+    path('auth/', include('accounts.urls')),
+    path('billing/', include('billing.urls')),
+    path('minigame/', include('minigame.urls')),
     
     # URL xử lý chuyển đổi ngôn ngữ
     path('i18n/', include('django.conf.urls.i18n')), 

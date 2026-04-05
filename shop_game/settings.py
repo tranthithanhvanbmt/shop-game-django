@@ -42,11 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'shop_game.accounts',
-    'shop_game.shop',
-    'shop_game.billing',
-    'shop_game.minigame',
-    'shop_game.core',
+    'accounts',
+    'shop',
+    'billing',
+    'minigame',
+    'core',
 ]
 
 MIDDLEWARE = [

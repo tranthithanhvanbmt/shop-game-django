@@ -6,9 +6,9 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from .models import CustomUser
-from shop_game.shop.models import NickOrder
-from shop_game.billing.models import DepositTransaction
-from shop_game.minigame.models import SpinHistory
+from shop.models import NickOrder
+from billing.models import DepositTransaction
+from minigame.models import SpinHistory
 
 # 1. ĐĂNG KÝ TÀI KHOẢN
 def register_view(request):

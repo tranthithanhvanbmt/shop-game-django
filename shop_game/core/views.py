@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from shop_game.shop.models import GameCategory, AccountInventory, NickOrder
-from shop_game.billing.models import DepositTransaction
+from shop.models import GameCategory, AccountInventory, NickOrder
+from billing.models import DepositTransaction
 
 
 def index(request):
