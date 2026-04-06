@@ -5,14 +5,6 @@ from django.contrib.auth.models import AbstractUser
 
 
 class SafeDecimalField(models.DecimalField):
-    def from_db_value(self, value, expression, connection):
-        if value is None:
-            return None
-        try:
-            return super().from_db_value(value, expression, connection)
-        except (InvalidOperation, TypeError, ValueError):
-            return Decimal('0.00') if self.decimal_places else Decimal(0)
-
     def to_python(self, value):
         if value is None or isinstance(value, Decimal):
             return value
