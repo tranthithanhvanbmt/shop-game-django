@@ -1,2 +1,2 @@
-web: python shop_game/manage.py migrate && python shop_game/manage.py collectstatic --noinput && python shop_game/manage.py createsuperuser --noinput --username admin --email admin@shopdh6.com && gunicorn shop_game.wsgi:application
+web: python shop_game/manage.py migrate && python shop_game/manage.py collectstatic --noinput && gunicorn shop_game.wsgi:application
 release: python shop_game/manage.py migrate && python shop_game/manage.py collectstatic --noinput

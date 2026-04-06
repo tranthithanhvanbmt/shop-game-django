@@ -224,3 +224,27 @@ JAZZMIN_UI_TWEAKS = {
     "pagination": "pagination-rounded",
 }
 
+# ==========================================
+# TỰ ĐỘNG TẠO SUPERUSER TỪ ENVIRONMENT VARIABLES
+# ==========================================
+import os
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+# Tạo superuser nếu chưa tồn tại và có env vars
+if os.getenv('DJANGO_SUPERUSER_USERNAME') and os.getenv('DJANGO_SUPERUSER_PASSWORD'):
+    try:
+        if not User.objects.filter(username=os.getenv('DJANGO_SUPERUSER_USERNAME')).exists():
+            User.objects.create_superuser(
+                username=os.getenv('DJANGO_SUPERUSER_USERNAME'),
+                email=os.getenv('DJANGO_SUPERUSER_EMAIL', ''),
+                password=os.getenv('DJANGO_SUPERUSER_PASSWORD')
+            )
+            print(f"Superuser '{os.getenv('DJANGO_SUPERUSER_USERNAME')}' created successfully.")
+        else:
+            print(f"Superuser '{os.getenv('DJANGO_SUPERUSER_USERNAME')}' already exists.")
+    except Exception as e:
+        print(f"Error creating superuser: {e}")
+
+
