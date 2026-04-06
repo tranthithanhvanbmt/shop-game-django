@@ -1,0 +1,2 @@
+web: gunicorn shop_game.wsgi:application
+release: python shop_game/manage.py migrate && python shop_game/manage.py collectstatic --noinput
