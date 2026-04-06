@@ -1,11 +1,31 @@
+from decimal import Decimal, InvalidOperation
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
+class SafeDecimalField(models.DecimalField):
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return None
+        try:
+            return super().from_db_value(value, expression, connection)
+        except (InvalidOperation, TypeError, ValueError):
+            return Decimal('0.00') if self.decimal_places else Decimal(0)
+
+    def to_python(self, value):
+        if value is None or isinstance(value, Decimal):
+            return value
+        try:
+            return super().to_python(value)
+        except (InvalidOperation, TypeError, ValueError):
+            return Decimal('0.00') if self.decimal_places else Decimal(0)
+
+
 class CustomUser(AbstractUser):
     """Người dùng mở rộng với số dư, tổng nạp và IP đăng ký."""
-    balance = models.DecimalField("Số dư", max_digits=12, decimal_places=2, default=0)
-    total_topup = models.DecimalField("Tổng nạp", max_digits=12, decimal_places=2, default=0)
+    balance = SafeDecimalField("Số dư", max_digits=12, decimal_places=2, default=0)
+    total_topup = SafeDecimalField("Tổng nạp", max_digits=12, decimal_places=2, default=0)
     signup_ip = models.GenericIPAddressField("IP đăng ký", null=True, blank=True)
 
     class Meta:
