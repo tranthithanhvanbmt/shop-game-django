@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-fy%84j5(je@^=#-n%tvhhz(*+-72se49he+x1zza(099&9yc$u
 # SECURITY WARNING: don't run with debug turned on in production!
 # CẢNH BÁO: CHỈ ĐỔI THÀNH False KHI BẠN CHUẨN BỊ UP LÊN HOSTING/VPS CHẠY THẬT.
 # Nếu bạn đang chạy thử ở localhost (máy tính cá nhân), hãy cứ để True nhé.
-DEBUG = False
+DEBUG = True
 
 # Khi DEBUG = False, bạn bắt buộc phải khai báo tên miền của bạn vào đây.
 # Dấu '*' nghĩa là cho phép mọi tên miền truy cập.
