@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,16 +23,22 @@ BASE_DIR = Path(__file__).resolve().parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fy%84j5(je@^=#-n%tvhhz(*+-72se49he+x1zza(099&9yc$u'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-fy%84j5(je@^=#-n%tvhhz(*+-72se49he+x1zza(099&9yc$u')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # CẢNH BÁO: CHỈ ĐỔI THÀNH False KHI BẠN CHUẨN BỊ UP LÊN HOSTING/VPS CHẠY THẬT.
 # Nếu bạn đang chạy thử ở localhost (máy tính cá nhân), hãy cứ để True nhé.
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() == 'true'
+IS_RENDER = os.getenv('RENDER', '').lower() == 'true'
+if IS_RENDER:
+    DEBUG = False
 
 # Khi DEBUG = False, bạn bắt buộc phải khai báo tên miền của bạn vào đây.
 # Dấu '*' nghĩa là cho phép mọi tên miền truy cập.
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',') if h.strip()]
+RENDER_HOST = os.getenv('RENDER_EXTERNAL_HOSTNAME', '').strip()
+if RENDER_HOST and RENDER_HOST not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_HOST)
 
 
 # Application definition
@@ -88,10 +97,11 @@ WSGI_APPLICATION = 'shop_game.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+        ssl_require=bool(os.getenv('DATABASE_URL')) and (not DEBUG),
+    )
 }
 
 
@@ -150,7 +160,16 @@ STATICFILES_DIRS = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+if IS_RENDER:
+    render_disk_path = Path(os.getenv('RENDER_DISK_PATH', '/var/data'))
+    MEDIA_ROOT = render_disk_path / 'media'
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
