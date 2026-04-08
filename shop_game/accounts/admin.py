@@ -6,9 +6,9 @@ from .models import CustomUser, LoginHistory
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     fieldsets = UserAdmin.fieldsets + (
-        ('Thông tin Shop', {'fields': ('balance', 'total_topup', 'signup_ip')}),
+        ('Thông tin Shop', {'fields': ('balance', 'total_topup', 'signup_ip', 'is_seller')}),
     )
-    list_display = ['username', 'email', 'balance', 'total_topup', 'is_staff']
+    list_display = ['username', 'email', 'balance', 'total_topup', 'is_seller', 'is_staff']
     search_fields = ['username', 'email']
 
 

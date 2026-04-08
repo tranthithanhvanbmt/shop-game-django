@@ -17,15 +17,24 @@
                 <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#deposit-history" role="tab">
                     <i class="fas fa-money-bill-wave me-2"></i> Lịch sử nạp tiền
                 </a>
+                <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#bank-topup-history" role="tab">
+                    <i class="fas fa-university me-2"></i> Nạp ngân hàng
+                </a>
                 <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#nick-history" role="tab">
                     <i class="fas fa-gamepad me-2"></i> Lịch sử mua nick
                 </a>
                 <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#spin-history" role="tab">
                     <i class="fas fa-dharmachakra me-2"></i> Lịch sử vòng quay
                 </a>
-                <a class="list-group-item list-group-item-action text-muted" href="#" onclick="alert('Tính năng đang phát triển!'); return false;">
-                    <i class="fas fa-store me-2"></i> Đăng bán nick (Sắp có)
+                {% if user.is_seller %}
+                <a class="list-group-item list-group-item-action fw-bold text-success" href="{% url 'seller_create_account' %}">
+                    <i class="fas fa-store me-2"></i> Đăng bán nick
                 </a>
+                {% else %}
+                <a class="list-group-item list-group-item-action text-muted" href="#" onclick="alert('Bạn chưa được cấp quyền Seller. Vui lòng liên hệ Admin.'); return false;">
+                    <i class="fas fa-store me-2"></i> Đăng bán nick (Cần quyền Seller)
+                </a>
+                {% endif %}
                 <a class="list-group-item list-group-item-action text-muted" href="#" onclick="alert('Tính năng đang phát triển!'); return false;">
                     <i class="fas fa-university me-2"></i> Tài khoản ngân hàng (Sắp có)
                 </a>
@@ -101,12 +110,39 @@
                     </div>
                 </div>
 
+                <div class="tab-pane fade" id="bank-topup-history" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-university"></i> LỊCH SỬ NẠP NGÂN HÀNG</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr><th>Thời gian</th><th>Số tiền</th><th>Nội dung CK</th><th>Trạng thái</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in bank_topups %}
+                                <tr>
+                                    <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td class="fw-bold text-primary">{{ item.amount }}đ</td>
+                                    <td>{{ item.transfer_content }}</td>
+                                    <td>
+                                        {% if item.status == 'PENDING' %}<span class="badge bg-warning text-dark">Chờ duyệt</span>
+                                        {% elif item.status == 'SUCCESS' %}<span class="badge bg-success">Thành công</span>
+                                        {% else %}<span class="badge bg-danger">Thất bại</span>{% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-muted">Chưa có giao dịch nạp ngân hàng.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div class="tab-pane fade" id="nick-history" role="tabpanel">
                     <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-gamepad"></i> TÀI KHOẢN ĐÃ MUA</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered text-center align-middle">
                             <thead class="table-light">
-                                <tr><th>Mã SP</th><th>Tài khoản / Mật khẩu</th><th>Giá tiền</th><th>Ngày mua</th></tr>
+                                <tr><th>Mã SP</th><th>Tài khoản / Mật khẩu</th><th>Giá tiền</th><th>Trạng thái</th><th>Ngày mua</th></tr>
                             </thead>
                             <tbody>
                                 {% for order in orders %}
@@ -114,15 +150,26 @@
                                     <td>#{{ order.account.id }}</td>
                                     <td>
                                         <div class="text-start">
-                                            <strong>TK:</strong> {{ order.account.username }}<br>
-                                            <strong>MK:</strong> <span class="text-danger">{{ order.account.password }}</span>
+                                            {% if order.status == 'COMPLETED' or order.status == 'SUCCESS' %}
+                                                <strong>TK:</strong> {{ order.account.username }}<br>
+                                                <strong>MK:</strong> <span class="text-danger">{{ order.account.password }}</span>
+                                            {% elif order.status == 'CANCELLED' or order.status == 'REFUNDED' %}
+                                                <span class="text-muted">Đơn đã bị hủy và hoàn tiền.</span>
+                                            {% else %}
+                                                <span class="text-muted">Tài khoản sẽ hiển thị sau khi admin duyệt.</span>
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td class="text-danger fw-bold">{{ order.price_paid }}đ</td>
+                                    <td>
+                                        {% if order.status == 'PENDING' or order.status == 'CHECKING' %}<span class="badge bg-warning text-dark">Đang chờ duyệt</span>
+                                        {% elif order.status == 'COMPLETED' or order.status == 'SUCCESS' %}<span class="badge bg-success">Hoàn thành</span>
+                                        {% elif order.status == 'CANCELLED' or order.status == 'REFUNDED' %}<span class="badge bg-secondary">Đã hủy</span>{% else %}<span class="badge bg-light text-dark">{{ order.status }}</span>{% endif %}
+                                    </td>
                                     <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="4" class="text-muted">Bạn chưa mua tài khoản nào.</td></tr>
+                                <tr><td colspan="5" class="text-muted">Bạn chưa mua tài khoản nào.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>

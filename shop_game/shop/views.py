@@ -1,16 +1,20 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import transaction
 from .models import AccountInventory, NickOrder, GameCategory
 from shop_game.minigame.models import Wheel
+from shop_game.core.models import Banner
 
 
 def home_view(request):
     games = GameCategory.objects.filter(is_active=True).order_by('-created_at')
     wheels = Wheel.objects.filter(is_active=True).order_by('-created_at')
+    banners = Banner.objects.filter(is_active=True).order_by('order', '-id')
     context = {
         'games': games,
         'wheels': wheels,
+        'banners': banners,
     }
     return render(request, 'index.html', context)
 
@@ -18,7 +22,7 @@ def home_view(request):
 # 1. TRANG HIỂN THỊ DANH SÁCH NICK CỦA 1 GAME
 def category_detail_view(request, category_id):
     category = get_object_or_404(GameCategory, id=category_id, is_active=True)
-    accounts = AccountInventory.objects.filter(category=category, status='AVAILABLE')
+    accounts = AccountInventory.objects.filter(category=category, status='AVAILABLE', is_approved=True)
 
     # --- LOGIC LỌC TÌM KIẾM ---
     search_id = request.GET.get('search_id')
@@ -51,34 +55,88 @@ def category_detail_view(request, category_id):
     return render(request, 'category_detail.html', context)
 
 
+def account_detail_view(request, account_id):
+    account = get_object_or_404(
+        AccountInventory.objects.select_related('category'),
+        id=account_id,
+        status='AVAILABLE',
+        is_approved=True,
+    )
+    return render(request, 'account_detail.html', {'account': account})
+
+
 # 2. XỬ LÝ KHI KHÁCH BẤM NÚT "MUA NGAY"
 @login_required
 def buy_account_view(request, account_id):
     if request.method == 'POST':
-        account = get_object_or_404(AccountInventory, id=account_id)
-        user = request.user
+        with transaction.atomic():
+            account = get_object_or_404(
+                AccountInventory.objects.select_for_update(),
+                id=account_id
+            )
+            user = type(request.user).objects.select_for_update().get(pk=request.user.pk)
 
-        if account.status != 'AVAILABLE':
-            messages.error(request, "Rất tiếc, tài khoản này đã có người nhanh tay mua mất!")
-            return redirect('category_detail', category_id=account.category.id)
+            if account.status != 'AVAILABLE' or not account.is_approved:
+                messages.error(request, "Tài khoản đã được người khác mua hoặc đang chờ duyệt.")
+                return redirect('category_detail', category_id=account.category.id)
 
-        if user.balance < account.price:
-            messages.error(request, "Số dư của bạn không đủ! Vui lòng nạp thêm tiền.")
-            return redirect('category_detail', category_id=account.category.id)
+            if user.balance < account.price:
+                messages.error(request, "Số dư của bạn không đủ! Vui lòng nạp thêm tiền.")
+                return redirect('category_detail', category_id=account.category.id)
 
-        user.balance -= account.price
-        user.save()
+            user.balance -= account.price
+            user.save(update_fields=['balance'])
 
-        account.status = 'SOLD'
-        account.save()
+            account.status = 'SOLD'
+            account.save(update_fields=['status'])
 
-        NickOrder.objects.create(
-            buyer=user,
-            account=account,
-            price_paid=account.price
-        )
+            NickOrder.objects.create(
+                buyer=user,
+                account=account,
+                price_paid=account.price,
+                status='PENDING'
+            )
 
-        messages.success(request, f"🎉 MUA THÀNH CÔNG! Tài khoản: {account.username} | Mật khẩu: {account.password}")
+        messages.success(request, "Mua thành công! Đơn hàng đang chờ admin duyệt.")
         return redirect('category_detail', category_id=account.category.id)
 
     return redirect('home')
+
+
+@login_required
+def seller_create_account_view(request):
+    if not getattr(request.user, 'is_seller', False):
+        messages.error(request, "Bạn chưa được cấp quyền Cộng tác viên/Seller.")
+        return redirect('profile')
+
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        login_method = request.POST.get('login_method') or 'Garena'
+        price = request.POST.get('price')
+        rank = request.POST.get('rank')
+        details = request.POST.get('details')
+
+        category = get_object_or_404(GameCategory, id=category_id, is_active=True)
+
+        AccountInventory.objects.create(
+            category=category,
+            username=username,
+            password=password,
+            login_method=login_method,
+            price=price,
+            rank=rank,
+            details=details,
+            image_thumb=request.FILES.get('image_thumb'),
+            image_1=request.FILES.get('image_1'),
+            image_2=request.FILES.get('image_2'),
+            status='HIDDEN',
+            submitted_by=request.user,
+            is_approved=False,
+        )
+        messages.success(request, "Đăng bán thành công. Tài khoản đang ở trạng thái chờ duyệt.")
+        return redirect('profile')
+
+    categories = GameCategory.objects.filter(is_active=True).order_by('name')
+    return render(request, 'seller_create_account.html', {'categories': categories})

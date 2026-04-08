@@ -18,14 +18,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from shop_game.shop.views import home_view, category_detail_view, buy_account_view
+from shop_game.shop.views import home_view, category_detail_view, account_detail_view, buy_account_view, seller_create_account_view
 
 urlpatterns = [
     path('quan-ly-bi-mat/', admin.site.urls),
     path('', home_view, name='home'),
 
     path('category/<int:category_id>/', category_detail_view, name='category_detail'),
+    path('account/<int:account_id>/', account_detail_view, name='account_detail'),
     path('buy/<int:account_id>/', buy_account_view, name='buy_account'),
+    path('seller/create-account/', seller_create_account_view, name='seller_create_account'),
     
     # Khai báo đường dẫn tới app accounts
     path('auth/', include('shop_game.accounts.urls')),

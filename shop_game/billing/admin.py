@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CardProvider, DepositTransaction, CardInventory
+from .models import CardProvider, DepositTransaction, CardInventory, CardTransaction, BankTopupTransaction
 
 class CardProviderAdmin(admin.ModelAdmin):
     list_display = ['name', 'code', 'discount_rate', 'is_active']
@@ -23,6 +23,22 @@ class CardInventoryAdmin(admin.ModelAdmin):
             return [] # Hoặc ['card_code'] nếu bạn muốn admin cũng không được sửa mã thẻ
         return []
 
+
+class CardTransactionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'provider', 'declared_value', 'real_value', 'status', 'created_at']
+    list_filter = ['status', 'provider', 'created_at']
+    search_fields = ['user__username', 'serial', 'card_code']
+    list_editable = ['status']
+
+
+class BankTopupTransactionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'amount', 'transfer_content', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['user__username', 'transfer_content']
+    list_editable = ['status']
+
 admin.site.register(CardProvider, CardProviderAdmin)
 admin.site.register(DepositTransaction, DepositTransactionAdmin)
 admin.site.register(CardInventory, CardInventoryAdmin)
+admin.site.register(CardTransaction, CardTransactionAdmin)
+admin.site.register(BankTopupTransaction, BankTopupTransactionAdmin)

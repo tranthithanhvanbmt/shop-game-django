@@ -154,6 +154,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+# Cấu hình nạp tiền ngân hàng bằng VietQR
+BANK_QR_BANK_CODE = 'MB'
+BANK_QR_ACCOUNT_NO = ''
+BANK_QR_ACCOUNT_NAME = 'SHOPDH6'
+
 # ==========================================
 # CẤU HÌNH GIAO DIỆN ADMIN JAZZMIN
 # ==========================================

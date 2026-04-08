@@ -19,6 +19,7 @@ class CustomUser(AbstractUser):
     balance = SafeDecimalField("Số dư", max_digits=12, decimal_places=2, default=0)
     total_topup = SafeDecimalField("Tổng nạp", max_digits=12, decimal_places=2, default=0)
     signup_ip = models.GenericIPAddressField("IP đăng ký", null=True, blank=True)
+    is_seller = models.BooleanField("Là cộng tác viên/Seller", default=False)
 
     class Meta:
         verbose_name = "Người dùng"

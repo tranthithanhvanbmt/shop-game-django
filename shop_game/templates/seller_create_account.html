@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Đăng bán tài khoản{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white fw-bold">
+                <i class="fas fa-store"></i> ĐĂNG BÁN TÀI KHOẢN (CHỜ DUYỆT)
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Danh mục game</label>
+                            <select name="category_id" class="form-select" required>
+                                <option value="">-- Chọn danh mục --</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Giá bán</label>
+                            <input type="number" min="1000" name="price" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tài khoản đăng nhập</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Mật khẩu</label>
+                            <input type="text" name="password" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kiểu đăng nhập</label>
+                            <input type="text" name="login_method" class="form-control" placeholder="Garena/Facebook/Google">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Rank</label>
+                            <input type="text" name="rank" class="form-control" placeholder="Ví dụ: Cao thủ">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả tài khoản</label>
+                        <textarea name="details" class="form-control" rows="3" placeholder="Skin, thông tin nổi bật..."></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Ảnh bìa</label>
+                            <input type="file" name="image_thumb" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Ảnh chi tiết 1</label>
+                            <input type="file" name="image_1" class="form-control" accept="image/*">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Ảnh chi tiết 2</label>
+                            <input type="file" name="image_2" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold">GỬI DUYỆT TÀI KHOẢN</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

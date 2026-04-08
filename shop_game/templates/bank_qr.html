@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Quét QR nạp tiền{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white fw-bold text-center">
+                <i class="fas fa-qrcode"></i> QUÉT MÃ QR ĐỂ NẠP TIỀN
+            </div>
+            <div class="card-body text-center">
+                <p class="mb-2">Số tiền cần chuyển: <strong class="text-primary">{{ tx.amount }}đ</strong></p>
+                <p class="mb-3">Nội dung chuyển khoản: <strong>{{ tx.transfer_content }}</strong></p>
+                <img src="{{ tx.qr_url }}" alt="Mã QR nạp tiền" class="img-fluid border rounded p-2" style="max-width: 320px;">
+                <p class="small text-muted mt-3 mb-0">Sau khi chuyển khoản thành công, Admin sẽ duyệt và cộng tiền vào tài khoản của bạn.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

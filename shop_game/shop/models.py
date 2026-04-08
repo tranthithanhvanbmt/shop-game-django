@@ -1,4 +1,7 @@
 from django.db import models
+from django.db import transaction
+from django.db.models import F
+from django.utils import timezone
 from django.conf import settings
 
 # 1. BẢNG DANH MỤC GAME (Ví dụ: Free Fire, Liên Quân, PUBG...)
@@ -44,6 +47,15 @@ class AccountInventory(models.Model):
     image_2 = models.ImageField("Ảnh chi tiết 2", upload_to='accounts/details/', null=True, blank=True)
 
     status = models.CharField("Trạng thái", max_length=20, choices=STATUS_CHOICES, default='AVAILABLE')
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='submitted_accounts',
+        verbose_name="Người đăng bán"
+    )
+    is_approved = models.BooleanField("Đã duyệt hiển thị", default=True)
     created_at = models.DateTimeField("Ngày đăng", auto_now_add=True)
 
     class Meta:
@@ -57,9 +69,18 @@ class AccountInventory(models.Model):
 
 # 3. BẢNG ĐƠN HÀNG MUA NICK
 class NickOrder(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Đang chờ duyệt'),
+        ('COMPLETED', 'Hoàn thành'),
+        ('CANCELLED', 'Đã hủy'),
+    )
+
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='nick_orders', verbose_name="Người mua")
     account = models.OneToOneField(AccountInventory, on_delete=models.CASCADE, verbose_name="Nick đã mua")
     price_paid = models.DecimalField("Giá lúc mua", max_digits=12, decimal_places=0, help_text="Lưu lại giá lúc mua phòng khi admin đổi giá nick sau này")
+    status = models.CharField("Trạng thái đơn", max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    refund_note = models.TextField("Ghi chú hoàn tiền", null=True, blank=True)
+    refunded_at = models.DateTimeField("Thời gian hoàn tiền", null=True, blank=True)
     created_at = models.DateTimeField("Thời gian mua", auto_now_add=True)
 
     class Meta:
@@ -69,3 +90,28 @@ class NickOrder(models.Model):
 
     def __str__(self):
         return f"Đơn #{self.id} - {self.buyer.username} mua Nick #{self.account.id}"
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            old_status = None
+            old_refunded_at = None
+            if self.pk:
+                previous = NickOrder.objects.filter(pk=self.pk).values('status', 'refunded_at').first()
+                if previous:
+                    old_status = previous['status']
+                    old_refunded_at = previous['refunded_at']
+
+            if self.status == 'CANCELLED' and not self.refunded_at:
+                self.refunded_at = timezone.now()
+
+            super().save(*args, **kwargs)
+
+            should_refund = self.status == 'CANCELLED' and old_status != 'CANCELLED' and old_refunded_at is None
+            if should_refund:
+                user = type(self.buyer).objects.select_for_update().get(pk=self.buyer_id)
+                user.balance = F('balance') + self.price_paid
+                user.save(update_fields=['balance'])
+
+                account = AccountInventory.objects.select_for_update().get(pk=self.account_id)
+                account.status = 'HIDDEN'
+                account.save(update_fields=['status'])

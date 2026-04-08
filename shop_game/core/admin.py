@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import SiteSetting, Banner, News
 
 class SiteSettingAdmin(admin.ModelAdmin):
@@ -9,8 +10,19 @@ class SiteSettingAdmin(admin.ModelAdmin):
         return True
 
 class BannerAdmin(admin.ModelAdmin):
-    list_display = ['title', 'image', 'is_active', 'order']
-    list_editable = ['is_active', 'order'] # Cho phép bật/tắt banner nhanh
+    list_display = ['id', 'title', 'image_preview', 'link', 'is_active', 'order']
+    list_editable = ['is_active', 'order']  # Cho phép bật/tắt và đổi thứ tự nhanh
+    list_filter = ['is_active']
+    search_fields = ['title', 'link']
+    ordering = ['order', '-id']
+    readonly_fields = ['image_preview']
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height:56px;border-radius:6px;" />', obj.image.url)
+        return '-'
+
+    image_preview.short_description = 'Xem trước'
 
 class NewsAdmin(admin.ModelAdmin):
     list_display = ['title', 'is_published', 'created_at']

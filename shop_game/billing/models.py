@@ -1,5 +1,7 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models import F
 from django.conf import settings
+from django.utils import timezone
 
 # 1. BẢNG NHÀ CUNG CẤP THẺ (Viettel, Vina, Garena, Zing...)
 class CardProvider(models.Model):
@@ -46,6 +48,100 @@ class DepositTransaction(models.Model):
 
     def __str__(self):
         return f"Nạp {self.declared_value} - {self.provider.name} - {self.user.username}"
+
+
+class CardTransaction(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Chờ xử lý'),
+        ('SUCCESS', 'Thành công'),
+        ('FAILED', 'Thất bại'),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='card_transactions', verbose_name="Người nạp")
+    provider = models.ForeignKey(CardProvider, on_delete=models.SET_NULL, null=True, verbose_name="Loại thẻ")
+    declared_value = models.DecimalField("Mệnh giá", max_digits=12, decimal_places=0)
+    serial = models.CharField("Số seri", max_length=100)
+    card_code = models.CharField("Mã thẻ", max_length=100)
+    real_value = models.DecimalField("Thực nhận", max_digits=12, decimal_places=0, default=0)
+    status = models.CharField("Trạng thái", max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    note = models.TextField("Ghi chú", null=True, blank=True)
+    processed_at = models.DateTimeField("Thời gian xử lý", null=True, blank=True)
+    created_at = models.DateTimeField("Thời gian tạo", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Giao dịch thẻ cào"
+        verbose_name_plural = "Giao dịch thẻ cào"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Card #{self.id} - {self.user.username} - {self.declared_value}"
+
+    def save(self, *args, **kwargs):
+        old_status = None
+        old_processed_at = None
+        if self.pk:
+            previous = CardTransaction.objects.filter(pk=self.pk).values('status', 'processed_at').first()
+            if previous:
+                old_status = previous['status']
+                old_processed_at = previous['processed_at']
+
+        if self.status in ('SUCCESS', 'FAILED') and not self.processed_at:
+            self.processed_at = timezone.now()
+
+        super().save(*args, **kwargs)
+
+        if self.status == 'SUCCESS' and old_status != 'SUCCESS' and old_processed_at is None:
+            with transaction.atomic():
+                user = type(self.user).objects.select_for_update().get(pk=self.user_id)
+                user.balance = F('balance') + self.real_value
+                user.total_topup = F('total_topup') + self.real_value
+                user.save(update_fields=['balance', 'total_topup'])
+
+
+class BankTopupTransaction(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Chờ xác nhận'),
+        ('SUCCESS', 'Đã cộng tiền'),
+        ('FAILED', 'Thất bại'),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bank_topups', verbose_name="Người nạp")
+    amount = models.DecimalField("Số tiền nạp", max_digits=12, decimal_places=0)
+    transfer_content = models.CharField("Nội dung chuyển khoản", max_length=255)
+    qr_url = models.URLField("Link ảnh QR", max_length=600)
+    status = models.CharField("Trạng thái", max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    note = models.TextField("Ghi chú", null=True, blank=True)
+    processed_at = models.DateTimeField("Thời gian xử lý", null=True, blank=True)
+    created_at = models.DateTimeField("Thời gian tạo", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Nạp ngân hàng"
+        verbose_name_plural = "Nạp ngân hàng"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"BankTopup #{self.id} - {self.user.username} - {self.amount}"
+
+    def save(self, *args, **kwargs):
+        old_status = None
+        old_processed_at = None
+        if self.pk:
+            previous = BankTopupTransaction.objects.filter(pk=self.pk).values('status', 'processed_at').first()
+            if previous:
+                old_status = previous['status']
+                old_processed_at = previous['processed_at']
+
+        if self.status in ('SUCCESS', 'FAILED') and not self.processed_at:
+            self.processed_at = timezone.now()
+
+        super().save(*args, **kwargs)
+
+        if self.status == 'SUCCESS' and old_status != 'SUCCESS' and old_processed_at is None:
+            with transaction.atomic():
+                user = type(self.user).objects.select_for_update().get(pk=self.user_id)
+                user.balance = F('balance') + self.amount
+                user.total_topup = F('total_topup') + self.amount
+                user.save(update_fields=['balance', 'total_topup'])
 
 
 # 3. BẢNG KHO THẺ CÀO (Thẻ admin tải lên để bán cho khách)

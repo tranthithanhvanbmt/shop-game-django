@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from shop_game.shop.models import GameCategory, AccountInventory, NickOrder
-from shop_game.billing.models import DepositTransaction
+from shop_game.billing.models import CardTransaction, DepositTransaction
 
 
 def index(request):
@@ -25,7 +25,12 @@ def category_detail(request, slug):
 @login_required
 def profile(request):
     orders = NickOrder.objects.filter(buyer=request.user).order_by('-created_at')
-    deposits = DepositTransaction.objects.filter(user=request.user).order_by('-created_at')
+    deposits = sorted(
+        list(DepositTransaction.objects.filter(user=request.user))
+        + list(CardTransaction.objects.filter(user=request.user)),
+        key=lambda item: item.created_at,
+        reverse=True,
+    )
     return render(request, 'core/profile.html', {
         'orders': orders,
         'deposits': deposits,

@@ -7,7 +7,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from .models import CustomUser
 from shop_game.shop.models import NickOrder
-from shop_game.billing.models import DepositTransaction
+from shop_game.billing.models import CardTransaction, DepositTransaction, BankTopupTransaction
 from shop_game.minigame.models import SpinHistory
 
 # 1. ĐĂNG KÝ TÀI KHOẢN
@@ -70,7 +70,13 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     orders = NickOrder.objects.filter(buyer=request.user).order_by('-created_at')
-    deposits = DepositTransaction.objects.filter(user=request.user).order_by('-created_at')
+    deposits = sorted(
+        list(CardTransaction.objects.filter(user=request.user))
+        + list(DepositTransaction.objects.filter(user=request.user)),
+        key=lambda item: item.created_at,
+        reverse=True,
+    )
+    bank_topups = BankTopupTransaction.objects.filter(user=request.user).order_by('-created_at')
     spins = SpinHistory.objects.filter(user=request.user).order_by('-created_at')
     
     # 1. Xử lý Đổi mật khẩu
@@ -99,6 +105,7 @@ def profile_view(request):
     context = {
         'orders': orders,
         'deposits': deposits,
+        'bank_topups': bank_topups,
         'spins': spins,
         'password_form': password_form
     }
