@@ -17,12 +17,14 @@ class CoreConfig(AppConfig):
         
         # Tạo MEDIA_ROOT nếu không tồn tại
         media_root = Path(settings.MEDIA_ROOT)
-        if not media_root.exists():
-            try:
+        try:
+            if not media_root.exists():
                 media_root.mkdir(parents=True, exist_ok=True)
                 logger.info(f"✓ Tạo media directory: {media_root}")
-            except Exception as e:
-                logger.error(f"✗ Lỗi khi tạo media directory: {e}")
+        except PermissionError:
+            logger.warning(f"⚠ Không có quyền tạo media directory: {media_root}")
+        except Exception as e:
+            logger.warning(f"⚠ Không thể tạo media directory: {e}")
         
         # Tạo các subdirectory cụ thể
         subdirs = [
@@ -42,5 +44,7 @@ class CoreConfig(AppConfig):
                 try:
                     dir_path.mkdir(parents=True, exist_ok=True)
                     logger.info(f"✓ Tạo thư mục: {subdir}")
+                except PermissionError:
+                    logger.debug(f"⚠ Không có quyền tạo thư mục {subdir}")
                 except Exception as e:
-                    logger.error(f"✗ Lỗi tạo thư mục {subdir}: {e}")
+                    logger.debug(f"⚠ Không thể tạo thư mục {subdir}: {e}")

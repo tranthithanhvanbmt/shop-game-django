@@ -154,15 +154,23 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR.parent / 'static',
-]
+# Chỉ thêm STATICFILES_DIRS nếu directory thực sự tồn tại
+_static_parent = BASE_DIR.parent / 'static'
+if _static_parent.exists():
+    STATICFILES_DIRS = [_static_parent]
+else:
+    STATICFILES_DIRS = []
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 if IS_RENDER:
-    render_disk_path = Path(os.getenv('RENDER_DISK_PATH', '/var/data'))
-    MEDIA_ROOT = render_disk_path / 'media'
+    # Trên Render, thử dùng RENDER_DISK_PATH nếu tồn tại, nếu không thì dùng /tmp
+    render_disk_path = Path(os.getenv('RENDER_DISK_PATH', ''))
+    if render_disk_path and render_disk_path.exists():
+        MEDIA_ROOT = render_disk_path / 'media'
+    else:
+        # Fallback: dùng /tmp trên Render (lưu ý: /tmp có thể bị xóa khi restart)
+        MEDIA_ROOT = Path('/tmp/media')
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
