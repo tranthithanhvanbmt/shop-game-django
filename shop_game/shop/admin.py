@@ -1,11 +1,19 @@
 from django.contrib import admin
+import logging
 from .models import GameCategory, AccountInventory, NickOrder
+from .forms import GameCategoryForm, AccountInventoryForm
+
+logger = logging.getLogger(__name__)
+
 
 class GameCategoryAdmin(admin.ModelAdmin):
+    form = GameCategoryForm
     list_display = ['name', 'slug', 'is_active', 'created_at']
-    prepopulated_fields = {'slug': ('name',)} # Tự động tạo slug từ tên game
+    prepopulated_fields = {'slug': ('name',)}  # Tự động tạo slug từ tên game
+
 
 class AccountInventoryAdmin(admin.ModelAdmin):
+    form = AccountInventoryForm
     list_display = ['id', 'category', 'submitted_by', 'is_approved', 'login_method', 'price', 'status', 'created_at']
     list_filter = ['status', 'is_approved', 'category', 'login_method']
     search_fields = ['username', 'id']
@@ -13,6 +21,16 @@ class AccountInventoryAdmin(admin.ModelAdmin):
 
     # Ẩn mật khẩu ở danh sách ngoài, nhưng bấm vào trong vẫn xem được
     readonly_fields = ['created_at']
+
+    def save_model(self, request, obj, form, change):
+        """Override để log khi save"""
+        try:
+            super().save_model(request, obj, form, change)
+            logger.info(f"✓ Lưu AccountInventory #{obj.id}")
+        except Exception as e:
+            logger.error(f"✗ Lỗi khi lưu AccountInventory: {str(e)}", exc_info=True)
+            raise
+
 
 class NickOrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'buyer', 'account', 'price_paid', 'status', 'created_at']

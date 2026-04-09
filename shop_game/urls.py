@@ -1,5 +1,4 @@
-"""
-URL configuration for shop_game project.
+"""URL configuration for shop_game project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/6.0/topics/http/urls/
@@ -38,5 +37,5 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')), 
 ]
 
-if settings.DEBUG:
+if settings.DEBUG or getattr(settings, 'IS_RENDER', False):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
