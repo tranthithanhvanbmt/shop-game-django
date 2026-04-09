@@ -12,6 +12,11 @@
                 <p class="mb-2">Số tiền cần chuyển: <strong class="text-primary">{{ tx.amount }}đ</strong></p>
                 <p class="mb-3">Nội dung chuyển khoản: <strong>{{ tx.transfer_content }}</strong></p>
                 <img src="{{ tx.qr_url }}" alt="Mã QR nạp tiền" class="img-fluid border rounded p-2" style="max-width: 320px;">
+                <div class="mt-3">
+                    <a href="{{ tx.qr_url }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">
+                        MỞ ẢNH QR Ở TAB MỚI
+                    </a>
+                </div>
                 <p class="small text-muted mt-3 mb-0">Sau khi chuyển khoản thành công, Admin sẽ duyệt và cộng tiền vào tài khoản của bạn.</p>
             </div>
         </div>

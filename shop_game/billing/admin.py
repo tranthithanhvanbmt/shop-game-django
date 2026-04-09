@@ -25,17 +25,19 @@ class CardInventoryAdmin(admin.ModelAdmin):
 
 
 class CardTransactionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'provider', 'declared_value', 'real_value', 'status', 'created_at']
+    list_display = ['id', 'user', 'provider', 'declared_value', 'real_value', 'status', 'processed_at', 'created_at']
     list_filter = ['status', 'provider', 'created_at']
     search_fields = ['user__username', 'serial', 'card_code']
     list_editable = ['status']
+    readonly_fields = ['processed_at', 'created_at']
 
 
 class BankTopupTransactionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'amount', 'transfer_content', 'status', 'created_at']
+    list_display = ['id', 'user', 'amount', 'transfer_content', 'status', 'processed_at', 'created_at']
     list_filter = ['status', 'created_at']
     search_fields = ['user__username', 'transfer_content']
     list_editable = ['status']
+    readonly_fields = ['processed_at', 'created_at']
 
 admin.site.register(CardProvider, CardProviderAdmin)
 admin.site.register(DepositTransaction, DepositTransactionAdmin)

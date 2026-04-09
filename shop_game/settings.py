@@ -185,6 +185,11 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 BANK_QR_BANK_CODE = 'MB'
 BANK_QR_ACCOUNT_NO = ''
 BANK_QR_ACCOUNT_NAME = 'SHOPDH6'
+# Nếu muốn dùng 1 ảnh QR cố định (ví dụ link CDN), điền URL tại đây hoặc env.
+BANK_QR_STATIC_IMAGE_URL = os.getenv(
+    'BANK_QR_STATIC_IMAGE_URL',
+    'https://img.sanishtech.com/u/235b68e0b06f9e0cb62a355bbf1d798c.jpeg?zarsrc=30&utm_source=zalo&utm_medium=zalo&utm_campaign=zalolink'
+)
 
 # ==========================================
 # CẤU HÌNH GIAO DIỆN ADMIN JAZZMIN

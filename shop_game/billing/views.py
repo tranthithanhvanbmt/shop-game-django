@@ -2,20 +2,29 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 from .models import CardProvider, CardTransaction, BankTopupTransaction
 
 @login_required  # Bắt buộc phải đăng nhập mới nạp được
 def deposit_view(request):
     if request.method == 'POST':
-        provider_code = request.POST.get('provider')
+        provider_code = (request.POST.get('provider') or '').strip().upper()
         value = request.POST.get('value')
-        serial = request.POST.get('serial')
-        code = request.POST.get('code')
+        serial = (request.POST.get('serial') or '').strip()
+        code = (request.POST.get('code') or '').strip()
 
         # 1. Kiểm tra dữ liệu đầu vào
         if not all([provider_code, value, serial, code]):
             messages.error(request, "Vui lòng nhập đầy đủ thông tin thẻ!")
+            return redirect('home')
+
+        try:
+            declared_value = Decimal(value)
+            if declared_value <= 0:
+                raise InvalidOperation
+        except (InvalidOperation, TypeError, ValueError):
+            messages.error(request, "Mệnh giá thẻ không hợp lệ!")
             return redirect('home')
 
         # 2. Tìm nhà mạng trong DB
@@ -29,7 +38,7 @@ def deposit_view(request):
         CardTransaction.objects.create(
             user=request.user,
             provider=provider,
-            declared_value=value,
+            declared_value=declared_value,
             serial=serial,
             card_code=code,
             status='PENDING'
@@ -54,17 +63,24 @@ def bank_qr_topup_view(request):
     bank_code = getattr(settings, 'BANK_QR_BANK_CODE', 'MB')
     account_no = getattr(settings, 'BANK_QR_ACCOUNT_NO', '')
     account_name = getattr(settings, 'BANK_QR_ACCOUNT_NAME', '')
-    if not account_no:
-        messages.error(request, "Admin chưa cấu hình số tài khoản ngân hàng để nạp QR.")
+    static_qr_url = (getattr(settings, 'BANK_QR_STATIC_IMAGE_URL', '') or '').strip()
+
+    # Nếu có link ảnh QR cố định thì ưu tiên dùng luôn.
+    # Dùng cho trường hợp user muốn hiển thị 1 ảnh ngân hàng cố định từ CDN.
+    if not static_qr_url and not account_no:
+        messages.error(request, "Admin chưa cấu hình số tài khoản ngân hàng hoặc link ảnh QR.")
         return redirect('home')
 
     transfer_content = f"NAP {request.user.username}"
-    encoded_content = quote(transfer_content)
-    encoded_account_name = quote(account_name)
-    qr_url = (
-        f"https://img.vietqr.io/image/{bank_code}-{account_no}-compact2.png"
-        f"?amount={amount}&addInfo={encoded_content}&accountName={encoded_account_name}"
-    )
+    if static_qr_url:
+        qr_url = static_qr_url
+    else:
+        encoded_content = quote(transfer_content)
+        encoded_account_name = quote(account_name)
+        qr_url = (
+            f"https://img.vietqr.io/image/{bank_code}-{account_no}-compact2.png"
+            f"?amount={amount}&addInfo={encoded_content}&accountName={encoded_account_name}"
+        )
 
     tx = BankTopupTransaction.objects.create(
         user=request.user,

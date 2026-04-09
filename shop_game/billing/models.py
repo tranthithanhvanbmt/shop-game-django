@@ -47,7 +47,8 @@ class DepositTransaction(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Nạp {self.declared_value} - {self.provider.name} - {self.user.username}"
+        provider_name = self.provider.name if self.provider else 'Unknown'
+        return f"Nạp {self.declared_value} - {provider_name} - {self.user.username}"
 
 
 class CardTransaction(models.Model):
@@ -87,6 +88,11 @@ class CardTransaction(models.Model):
 
         if self.status in ('SUCCESS', 'FAILED') and not self.processed_at:
             self.processed_at = timezone.now()
+
+        # Nếu admin duyệt SUCCESS nhưng chưa nhập thực nhận thì tự tính theo chiết khấu
+        if self.status == 'SUCCESS' and (self.real_value is None or self.real_value <= 0):
+            discount = self.provider.discount_rate if self.provider else 0
+            self.real_value = self.declared_value * (1 - (discount / 100))
 
         super().save(*args, **kwargs)
 
