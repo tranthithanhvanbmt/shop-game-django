@@ -37,5 +37,6 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')), 
 ]
 
-if settings.DEBUG or getattr(settings, 'IS_RENDER', False):
+# Luôn map media URL để ảnh upload có thể truy cập trên cả local lẫn production.
+if settings.MEDIA_URL:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
