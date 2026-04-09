@@ -165,12 +165,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 if IS_RENDER:
     # Render: nếu đã gắn Persistent Disk thì dùng RENDER_DISK_PATH.
-    # Nếu chưa gắn disk, lưu tạm trong source folder (ephemeral nhưng hiển thị được ngay).
+    # Nếu chưa gắn disk, lưu tạm trong /tmp (writable trên Render).
     render_disk_path = os.getenv('RENDER_DISK_PATH', '').strip()
     if render_disk_path:
         MEDIA_ROOT = Path(render_disk_path) / 'media'
     else:
-        MEDIA_ROOT = BASE_DIR / 'media'
+        MEDIA_ROOT = Path('/tmp/media')
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 

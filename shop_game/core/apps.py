@@ -1,6 +1,5 @@
 from django.apps import AppConfig
 import logging
-import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -20,11 +19,11 @@ class CoreConfig(AppConfig):
         try:
             if not media_root.exists():
                 media_root.mkdir(parents=True, exist_ok=True)
-                logger.info(f"✓ Tạo media directory: {media_root}")
+                logger.info(f"Created media directory: {media_root}")
         except PermissionError:
-            logger.warning(f"⚠ Không có quyền tạo media directory: {media_root}")
+            logger.warning(f"No permission to create media directory: {media_root}")
         except Exception as e:
-            logger.warning(f"⚠ Không thể tạo media directory: {e}")
+            logger.warning(f"Could not create media directory: {e}")
         
         # Tạo các subdirectory cụ thể
         subdirs = [
@@ -43,8 +42,8 @@ class CoreConfig(AppConfig):
             if not dir_path.exists():
                 try:
                     dir_path.mkdir(parents=True, exist_ok=True)
-                    logger.info(f"✓ Tạo thư mục: {subdir}")
+                    logger.info(f"Created media subdirectory: {subdir}")
                 except PermissionError:
-                    logger.debug(f"⚠ Không có quyền tạo thư mục {subdir}")
+                    logger.debug(f"No permission to create media subdirectory: {subdir}")
                 except Exception as e:
-                    logger.debug(f"⚠ Không thể tạo thư mục {subdir}: {e}")
+                    logger.debug(f"Could not create media subdirectory {subdir}: {e}")

@@ -14,9 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from shop_game.shop.views import home_view, category_detail_view, account_detail_view, buy_account_view, seller_create_account_view
 
 urlpatterns = [
@@ -37,6 +38,12 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')), 
 ]
 
-# Luôn map media URL để ảnh upload có thể truy cập trên cả local lẫn production.
-if settings.MEDIA_URL:
+# Local dev
+if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Render production (DEBUG=False): map /media/* về MEDIA_ROOT
+if getattr(settings, 'IS_RENDER', False):
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]

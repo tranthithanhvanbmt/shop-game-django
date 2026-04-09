@@ -5,6 +5,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_IMAGE_MIME_TYPES = {
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/gif',
+    'image/webp',
+}
+
 
 class SiteSettingForm(forms.ModelForm):
     """Form cho SiteSetting với xử lý lỗi image upload"""
@@ -26,8 +36,8 @@ class SiteSettingForm(forms.ModelForm):
                 raise ValidationError(f"{field_name}: Kích thước ảnh không được vượt quá 5MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/x-icon']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in (ALLOWED_IMAGE_MIME_TYPES | {'image/x-icon', 'image/vnd.microsoft.icon'}):
                 raise ValidationError(
                     f"{field_name}: Định dạng ảnh không được hỗ trợ. "
                     f"Chấp nhận: JPEG, PNG, GIF, WebP, ICO"
@@ -51,8 +61,8 @@ class BannerForm(forms.ModelForm):
                 raise ValidationError("Kích thước ảnh Banner không được vượt quá 10MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in ALLOWED_IMAGE_MIME_TYPES:
                 raise ValidationError(f"Định dạng ảnh không được hỗ trợ. Chấp nhận: JPEG, PNG, GIF, WebP")
             
             logger.info(f"✓ Validate Banner ảnh: {image.name} ({image.size} bytes)")
@@ -73,8 +83,8 @@ class NewsForm(forms.ModelForm):
                 raise ValidationError("Kích thước ảnh không được vượt quá 5MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in ALLOWED_IMAGE_MIME_TYPES:
                 raise ValidationError(f"Định dạng ảnh không được hỗ trợ. Chấp nhận: JPEG, PNG, GIF, WebP")
             
             logger.info(f"✓ Validate tin tức ảnh: {image.name} ({image.size} bytes)")

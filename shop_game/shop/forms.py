@@ -5,6 +5,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_IMAGE_MIME_TYPES = {
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/gif',
+    'image/webp',
+}
+
 
 class GameCategoryForm(forms.ModelForm):
     """Form cho GameCategory với xử lý lỗi image upload"""
@@ -20,8 +30,8 @@ class GameCategoryForm(forms.ModelForm):
                 raise ValidationError("Kích thước ảnh không được vượt quá 5MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in ALLOWED_IMAGE_MIME_TYPES:
                 raise ValidationError(f"Định dạng ảnh không được hỗ trợ. Chấp nhận: JPEG, PNG, GIF, WebP")
             
             logger.info(f"✓ Validate ảnh: {image.name} ({image.size} bytes, {image.content_type})")
@@ -56,8 +66,8 @@ class AccountInventoryForm(forms.ModelForm):
                 raise ValidationError(f"{field_name}: Kích thước ảnh không được vượt quá 5MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in ALLOWED_IMAGE_MIME_TYPES:
                 raise ValidationError(
                     f"{field_name}: Định dạng ảnh không được hỗ trợ. "
                     f"Chấp nhận: JPEG, PNG, GIF, WebP"

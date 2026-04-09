@@ -5,6 +5,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_IMAGE_MIME_TYPES = {
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/gif',
+    'image/webp',
+}
+
 
 class WheelForm(forms.ModelForm):
     """Form cho Wheel với xử lý lỗi image upload"""
@@ -20,8 +30,8 @@ class WheelForm(forms.ModelForm):
                 raise ValidationError("Kích thước ảnh vòng quay không được vượt quá 5MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in ALLOWED_IMAGE_MIME_TYPES:
                 raise ValidationError(f"Định dạng ảnh không được hỗ trợ. Chấp nhận: JPEG, PNG, GIF, WebP")
             
             logger.info(f"✓ Validate vòng quay ảnh: {image.name} ({image.size} bytes)")
@@ -42,8 +52,8 @@ class RewardForm(forms.ModelForm):
                 raise ValidationError("Kích thước ảnh phần thưởng không được vượt quá 5MB")
             
             # Kiểm tra định dạng file
-            allowed_formats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-            if image.content_type not in allowed_formats:
+            content_type = getattr(image, 'content_type', None)
+            if content_type and content_type not in ALLOWED_IMAGE_MIME_TYPES:
                 raise ValidationError(f"Định dạng ảnh không được hỗ trợ. Chấp nhận: JPEG, PNG, GIF, WebP")
             
             logger.info(f"✓ Validate phần thưởng ảnh: {image.name} ({image.size} bytes)")
