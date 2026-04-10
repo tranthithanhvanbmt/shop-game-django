@@ -5,6 +5,7 @@ class SiteSetting(models.Model):
     site_name = models.CharField("Tên Website", max_length=100, default="Shop Game Siêu Rẻ")
     logo = models.ImageField("Logo Website", upload_to='settings/', null=True, blank=True)
     favicon = models.ImageField("Favicon (Icon tab)", upload_to='settings/', null=True, blank=True)
+    bank_qr_image = models.ImageField("Ảnh QR nạp ngân hàng", upload_to='settings/', null=True, blank=True)
     currency = models.CharField("Tiền tệ", max_length=10, default="VNĐ")
     hotline = models.CharField("Hotline hỗ trợ", max_length=20, null=True, blank=True)
     facebook_link = models.URLField("Link Facebook", null=True, blank=True)

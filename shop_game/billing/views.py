@@ -5,6 +5,7 @@ from django.conf import settings
 from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 from .models import CardProvider, CardTransaction, BankTopupTransaction
+from shop_game.core.models import SiteSetting
 
 @login_required  # Bắt buộc phải đăng nhập mới nạp được
 def deposit_view(request):
@@ -64,15 +65,22 @@ def bank_qr_topup_view(request):
     account_no = getattr(settings, 'BANK_QR_ACCOUNT_NO', '')
     account_name = getattr(settings, 'BANK_QR_ACCOUNT_NAME', '')
     static_qr_url = (getattr(settings, 'BANK_QR_STATIC_IMAGE_URL', '') or '').strip()
+    site_setting = SiteSetting.objects.first()
+
+    admin_qr_url = ''
+    if site_setting and site_setting.bank_qr_image:
+        admin_qr_url = request.build_absolute_uri(site_setting.bank_qr_image.url)
 
     # Nếu có link ảnh QR cố định thì ưu tiên dùng luôn.
     # Dùng cho trường hợp user muốn hiển thị 1 ảnh ngân hàng cố định từ CDN.
-    if not static_qr_url and not account_no:
+    if not admin_qr_url and not static_qr_url and not account_no:
         messages.error(request, "Admin chưa cấu hình số tài khoản ngân hàng hoặc link ảnh QR.")
         return redirect('home')
 
     transfer_content = f"NAP {request.user.username}"
-    if static_qr_url:
+    if admin_qr_url:
+        qr_url = admin_qr_url
+    elif static_qr_url:
         qr_url = static_qr_url
     else:
         encoded_content = quote(transfer_content)

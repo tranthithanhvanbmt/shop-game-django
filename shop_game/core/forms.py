@@ -20,13 +20,16 @@ class SiteSettingForm(forms.ModelForm):
     """Form cho SiteSetting với xử lý lỗi image upload"""
     class Meta:
         model = SiteSetting
-        fields = ['site_name', 'logo', 'favicon', 'currency', 'hotline', 'facebook_link', 'maintenance_mode']
+        fields = ['site_name', 'logo', 'favicon', 'bank_qr_image', 'currency', 'hotline', 'facebook_link', 'maintenance_mode']
 
     def clean_logo(self):
         return self._validate_image_field(self.cleaned_data.get('logo'), 'Logo')
 
     def clean_favicon(self):
         return self._validate_image_field(self.cleaned_data.get('favicon'), 'Favicon')
+
+    def clean_bank_qr_image(self):
+        return self._validate_image_field(self.cleaned_data.get('bank_qr_image'), 'Ảnh QR nạp ngân hàng')
 
     def _validate_image_field(self, image, field_name):
         """Validate ảnh"""
