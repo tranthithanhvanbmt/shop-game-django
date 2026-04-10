@@ -68,17 +68,39 @@
                             </div>
                         </div>
 
-                        <div class="alert alert-warning mb-4">
-                            Thông tin đăng nhập chỉ hiển thị trong lịch sử mua nick sau khi admin duyệt đơn.
+                        {% if can_view_credentials %}
+                        <div class="alert alert-success mb-4">
+                            Đây là tài khoản bạn đã mua. Thông tin đăng nhập được hiển thị để bạn sử dụng.
                         </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small">Tài khoản đăng nhập</div>
+                                    <div class="fw-bold">{{ account.username }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="text-muted small">Mật khẩu</div>
+                                    <div class="fw-bold text-danger">{{ account.password }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning mb-4">
+                            Tài khoản này chưa được mở thông tin đăng nhập. Sau khi mua thành công, bạn sẽ xem được ở lịch sử mua nick.
+                        </div>
+                        {% endif %}
 
                         <div class="d-flex gap-2 flex-wrap">
+                            {% if can_purchase %}
                             <form action="{% url 'buy_account' account.id %}" method="POST">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger fw-bold" onclick="return confirm('Bạn có chắc chắn muốn mua tài khoản #{{ account.id }} với giá {{ account.price }}đ không?');">
                                     <i class="fas fa-shopping-cart"></i> MUA NGAY
                                 </button>
                             </form>
+                            {% endif %}
                             <a href="{% url 'category_detail' account.category.id %}" class="btn btn-outline-secondary fw-bold">
                                 Quay lại danh sách
                             </a>

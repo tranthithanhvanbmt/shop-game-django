@@ -1,7 +1,15 @@
 from django.db import models, transaction
-from django.db.models import F
 from django.conf import settings
 from django.utils import timezone
+from decimal import Decimal
+
+
+def _max_value_for_decimal_field(model_cls, field_name):
+    field = model_cls._meta.get_field(field_name)
+    integer_digits = field.max_digits - field.decimal_places
+    if field.decimal_places:
+        return Decimal(f"{'9' * integer_digits}.{'9' * field.decimal_places}")
+    return Decimal('9' * integer_digits)
 
 # 1. BẢNG NHÀ CUNG CẤP THẺ (Viettel, Vina, Garena, Zing...)
 class CardProvider(models.Model):
@@ -99,8 +107,11 @@ class CardTransaction(models.Model):
         if self.status == 'SUCCESS' and old_status != 'SUCCESS' and old_processed_at is None:
             with transaction.atomic():
                 user = type(self.user).objects.select_for_update().get(pk=self.user_id)
-                user.balance = F('balance') + self.real_value
-                user.total_topup = F('total_topup') + self.real_value
+                max_balance = _max_value_for_decimal_field(type(user), 'balance')
+                max_total_topup = _max_value_for_decimal_field(type(user), 'total_topup')
+
+                user.balance = min(Decimal(user.balance) + Decimal(self.real_value), max_balance)
+                user.total_topup = min(Decimal(user.total_topup) + Decimal(self.real_value), max_total_topup)
                 user.save(update_fields=['balance', 'total_topup'])
 
 
@@ -145,8 +156,11 @@ class BankTopupTransaction(models.Model):
         if self.status == 'SUCCESS' and old_status != 'SUCCESS' and old_processed_at is None:
             with transaction.atomic():
                 user = type(self.user).objects.select_for_update().get(pk=self.user_id)
-                user.balance = F('balance') + self.amount
-                user.total_topup = F('total_topup') + self.amount
+                max_balance = _max_value_for_decimal_field(type(user), 'balance')
+                max_total_topup = _max_value_for_decimal_field(type(user), 'total_topup')
+
+                user.balance = min(Decimal(user.balance) + Decimal(self.amount), max_balance)
+                user.total_topup = min(Decimal(user.total_topup) + Decimal(self.amount), max_total_topup)
                 user.save(update_fields=['balance', 'total_topup'])
 
 

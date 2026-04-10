@@ -6,7 +6,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from .models import CustomUser
-from shop_game.shop.models import NickOrder
+from shop_game.shop.models import NickOrder, AccountInventory
 from shop_game.billing.models import CardTransaction, DepositTransaction, BankTopupTransaction
 from shop_game.minigame.models import SpinHistory
 
@@ -70,6 +70,7 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     orders = NickOrder.objects.filter(buyer=request.user).order_by('-created_at')
+    sale_history = AccountInventory.objects.filter(submitted_by=request.user).order_by('-created_at')
     deposits = sorted(
         list(CardTransaction.objects.filter(user=request.user))
         + list(DepositTransaction.objects.filter(user=request.user)),
@@ -104,6 +105,7 @@ def profile_view(request):
 
     context = {
         'orders': orders,
+        'sale_history': sale_history,
         'deposits': deposits,
         'bank_topups': bank_topups,
         'spins': spins,

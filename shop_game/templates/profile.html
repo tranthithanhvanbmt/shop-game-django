@@ -23,6 +23,9 @@
                 <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#nick-history" role="tab">
                     <i class="fas fa-gamepad me-2"></i> Lịch sử mua nick
                 </a>
+                <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#sale-history" role="tab">
+                    <i class="fas fa-store me-2"></i> Lịch sử đăng bán nick
+                </a>
                 <a class="list-group-item list-group-item-action fw-bold" data-bs-toggle="list" href="#spin-history" role="tab">
                     <i class="fas fa-dharmachakra me-2"></i> Lịch sử vòng quay
                 </a>
@@ -142,7 +145,7 @@
                     <div class="table-responsive">
                         <table class="table table-bordered text-center align-middle">
                             <thead class="table-light">
-                                <tr><th>Mã SP</th><th>Tài khoản / Mật khẩu</th><th>Giá tiền</th><th>Trạng thái</th><th>Ngày mua</th></tr>
+                                <tr><th>Mã SP</th><th>Tài khoản / Mật khẩu</th><th>Giá tiền</th><th>Trạng thái</th><th>Ngày mua</th><th>Hành động</th></tr>
                             </thead>
                             <tbody>
                                 {% for order in orders %}
@@ -167,9 +170,55 @@
                                         {% elif order.status == 'CANCELLED' or order.status == 'REFUNDED' %}<span class="badge bg-secondary">Đã hủy</span>{% else %}<span class="badge bg-light text-dark">{{ order.status }}</span>{% endif %}
                                     </td>
                                     <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if order.status != 'CANCELLED' and order.status != 'REFUNDED' %}
+                                            <a href="{% url 'account_detail' order.account.id %}" class="btn btn-sm btn-outline-primary fw-bold">
+                                                <i class="fas fa-eye"></i> Xem chi tiết
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">Không khả dụng</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="5" class="text-muted">Bạn chưa mua tài khoản nào.</td></tr>
+                                <tr><td colspan="6" class="text-muted">Bạn chưa mua tài khoản nào.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="sale-history" role="tabpanel">
+                    <h5 class="fw-bold border-bottom pb-2 mb-3"><i class="fas fa-store"></i> LỊCH SỬ ĐĂNG BÁN NICK</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                                <tr><th>Mã SP</th><th>Game</th><th>Giá bán</th><th>Trạng thái</th><th>Duyệt hiển thị</th><th>Ngày đăng</th><th>Hành động</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sale_history %}
+                                <tr>
+                                    <td>#{{ item.id }}</td>
+                                    <td class="text-start">{{ item.category.name }}</td>
+                                    <td class="text-danger fw-bold">{{ item.price }}đ</td>
+                                    <td>
+                                        {% if item.status == 'AVAILABLE' %}<span class="badge bg-success">Đang bán</span>
+                                        {% elif item.status == 'SOLD' %}<span class="badge bg-dark">Đã bán</span>
+                                        {% else %}<span class="badge bg-secondary">Tạm ẩn</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.is_approved %}<span class="badge bg-primary">Đã duyệt</span>
+                                        {% else %}<span class="badge bg-warning text-dark">Chờ duyệt</span>{% endif %}
+                                    </td>
+                                    <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'account_detail' item.id %}" class="btn btn-sm btn-outline-primary fw-bold">
+                                            <i class="fas fa-eye"></i> Xem chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="7" class="text-muted">Bạn chưa đăng bán nick nào.</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>

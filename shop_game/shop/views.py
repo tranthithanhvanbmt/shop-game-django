@@ -1,7 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.http import Http404
 from .models import AccountInventory, NickOrder, GameCategory
 from shop_game.minigame.models import Wheel
 from shop_game.core.models import Banner
@@ -56,13 +58,36 @@ def category_detail_view(request, category_id):
 
 
 def account_detail_view(request, account_id):
-    account = get_object_or_404(
-        AccountInventory.objects.select_related('category'),
-        id=account_id,
-        status='AVAILABLE',
-        is_approved=True,
+    account = get_object_or_404(AccountInventory.objects.select_related('category'), id=account_id)
+    order = getattr(account, 'nickorder', None)
+
+    can_view_credentials = False
+    can_view_public = account.status == 'AVAILABLE' and account.is_approved
+    buyer_can_view_detail = (
+        request.user.is_authenticated
+        and order is not None
+        and order.buyer_id == request.user.id
+        and order.status in ('PENDING', 'COMPLETED')
     )
-    return render(request, 'account_detail.html', {'account': account})
+    buyer_can_view_credentials = (
+        request.user.is_authenticated
+        and order is not None
+        and order.buyer_id == request.user.id
+        and order.status == 'COMPLETED'
+    )
+
+    if buyer_can_view_credentials:
+        can_view_credentials = True
+
+    if not can_view_public and not buyer_can_view_detail:
+        raise Http404
+
+    return render(request, 'account_detail.html', {
+        'account': account,
+        'order': order,
+        'can_purchase': account.status == 'AVAILABLE' and account.is_approved,
+        'can_view_credentials': can_view_credentials,
+    })
 
 
 # 2. XỬ LÝ KHI KHÁCH BẤM NÚT "MUA NGAY"
@@ -74,7 +99,7 @@ def buy_account_view(request, account_id):
                 AccountInventory.objects.select_for_update(),
                 id=account_id
             )
-            user = type(request.user).objects.select_for_update().get(pk=request.user.pk)
+            user = get_user_model().objects.select_for_update().get(pk=request.user.pk)
 
             if account.status != 'AVAILABLE' or not account.is_approved:
                 messages.error(request, "Tài khoản đã được người khác mua hoặc đang chờ duyệt.")
