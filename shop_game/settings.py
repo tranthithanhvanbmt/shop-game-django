@@ -164,7 +164,19 @@ if _static_parent.exists():
     STATICFILES_DIRS = [_static_parent]
 else:
     STATICFILES_DIRS = []
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if DEBUG:
+    _staticfiles_backend = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+else:
+    _staticfiles_backend = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+STORAGES = {
+    'default': {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    },
+    'staticfiles': {
+        'BACKEND': _staticfiles_backend,
+    },
+}
 
 MEDIA_URL = '/media/'
 if IS_RENDER:
@@ -316,11 +328,12 @@ FILE_UPLOAD_PERMISSIONS = 0o644  # Quyền read-write cho owner, read cho others
 
 # Cấu hình lưu trữ ảnh trên Cloudinary
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'shop_game',
+    'CLOUD_NAME': 'dkajdp3x0',
     'API_KEY': '411855522873336',
     'API_SECRET': '7RJdlRRZRhm8b8n0496_oZurxNM'
 }
 
-# Chỉ định Django dùng Cloudinary cho file Media (ảnh sản phẩm)
+# Backward-compatible aliases for packages still reading legacy settings.
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+STATICFILES_STORAGE = STORAGES['staticfiles']['BACKEND']
 
