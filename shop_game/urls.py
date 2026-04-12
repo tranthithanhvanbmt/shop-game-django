@@ -53,5 +53,6 @@ if settings.DEBUG:
 # Render production (DEBUG=False): map /media/* về MEDIA_ROOT
 if getattr(settings, 'IS_RENDER', False):
     urlpatterns += [
+        re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
         re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     ]
