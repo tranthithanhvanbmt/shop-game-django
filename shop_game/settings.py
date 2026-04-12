@@ -100,8 +100,8 @@ WSGI_APPLICATION = 'shop_game.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-        conn_max_age=600,
+        default='postgresql://neondb_owner:npg_rDuyt04fYwIk@ep-cool-wildflower-a4fz6v5n-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require',
+        conn_max_age=600
     )
 }
 
