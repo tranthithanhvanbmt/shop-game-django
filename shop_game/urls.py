@@ -54,6 +54,6 @@ if settings.DEBUG:
 # Production: map /static/* và /media/* về file system để tránh lỗi asset trên hosting
 if not settings.DEBUG:
     urlpatterns += [
-        re_path(r'^static/(?P<path>.*)$', staticfiles_serve),
+        re_path(r'^static/(?P<path>.*)$', staticfiles_serve, {'insecure': True}),
         re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     ]
