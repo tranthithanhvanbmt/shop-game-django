@@ -100,10 +100,11 @@ WSGI_APPLICATION = 'shop_game.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://neondb_owner:npg_rDuyt04fYwIk@ep-cool-wildflower-a4fz6v5n-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require',
+        default='postgresql://neondb_owner:npg_Sdzinm5Gp2lX@ep-hidden-wind-am8h4fzq-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require',
         conn_max_age=600
     )
 }
+DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
 
 
 # Password validation
