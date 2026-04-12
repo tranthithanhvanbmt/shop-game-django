@@ -50,7 +50,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
+    'cloudinary',
     'shop_game.accounts',
     'shop_game.shop',
     'shop_game.billing',
@@ -311,4 +313,14 @@ if not logs_dir.exists():
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 FILE_UPLOAD_PERMISSIONS = 0o644  # Quyền read-write cho owner, read cho others
+
+# Cấu hình lưu trữ ảnh trên Cloudinary
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'shop_game',
+    'API_KEY': '411855522873336',
+    'API_SECRET': '7RJdlRRZRhm8b8n0496_oZurxNM'
+}
+
+# Chỉ định Django dùng Cloudinary cho file Media (ảnh sản phẩm)
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
