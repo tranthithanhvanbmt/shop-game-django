@@ -18,7 +18,14 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
-from shop_game.shop.views import home_view, category_detail_view, account_detail_view, buy_account_view, seller_create_account_view
+from shop_game.shop.views import (
+    home_view,
+    category_detail_view,
+    account_detail_view,
+    buy_account_view,
+    seller_create_account_view,
+    seller_validate_image_url_view,
+)
 
 urlpatterns = [
     path('quan-ly-bi-mat/', admin.site.urls),
@@ -28,6 +35,7 @@ urlpatterns = [
     path('account/<int:account_id>/', account_detail_view, name='account_detail'),
     path('buy/<int:account_id>/', buy_account_view, name='buy_account'),
     path('seller/create-account/', seller_create_account_view, name='seller_create_account'),
+    path('seller/validate-image-url/', seller_validate_image_url_view, name='seller_validate_image_url'),
     
     # Khai báo đường dẫn tới app accounts
     path('auth/', include('shop_game.accounts.urls')),

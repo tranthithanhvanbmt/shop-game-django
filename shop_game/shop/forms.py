@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import GameCategory, AccountInventory
+from shop_game.core.image_url_utils import download_image_from_url
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,12 +19,26 @@ ALLOWED_IMAGE_MIME_TYPES = {
 
 class GameCategoryForm(forms.ModelForm):
     """Form cho GameCategory với xử lý lỗi image upload"""
+    image_url = forms.URLField(required=False, label="Link ảnh đại diện")
+
     class Meta:
         model = GameCategory
         fields = ['name', 'slug', 'image', 'description', 'is_active']
 
+    def _get_url_value(self, field_name):
+        return (self.cleaned_data.get(field_name) or self.data.get(field_name) or '').strip()
+
     def clean_image(self):
         image = self.cleaned_data.get('image')
+        image_url = self._get_url_value('image_url')
+        if not image and image_url:
+            image = download_image_from_url(
+                image_url=image_url,
+                field_label='Ảnh đại diện',
+                max_size_bytes=5 * 1024 * 1024,
+                allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+            )
+            self.cleaned_data['image'] = image
         if image:
             # Kiểm tra kích thước file (max 5MB)
             if image.size > 5 * 1024 * 1024:
@@ -40,6 +55,10 @@ class GameCategoryForm(forms.ModelForm):
 
 class AccountInventoryForm(forms.ModelForm):
     """Form cho AccountInventory với xử lý lỗi image upload"""
+    image_thumb_url = forms.URLField(required=False, label="Link ảnh bìa")
+    image_1_url = forms.URLField(required=False, label="Link ảnh chi tiết 1")
+    image_2_url = forms.URLField(required=False, label="Link ảnh chi tiết 2")
+
     class Meta:
         model = AccountInventory
         fields = [
@@ -49,14 +68,47 @@ class AccountInventoryForm(forms.ModelForm):
             'status', 'submitted_by', 'is_approved'
         ]
 
+    def _get_url_value(self, field_name):
+        return (self.cleaned_data.get(field_name) or self.data.get(field_name) or '').strip()
+
     def clean_image_thumb(self):
-        return self._validate_image_field(self.cleaned_data.get('image_thumb'), 'Ảnh bìa')
+        image = self.cleaned_data.get('image_thumb')
+        image_thumb_url = self._get_url_value('image_thumb_url')
+        if not image and image_thumb_url:
+            image = download_image_from_url(
+                image_url=image_thumb_url,
+                field_label='Ảnh bìa',
+                max_size_bytes=5 * 1024 * 1024,
+                allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+            )
+            self.cleaned_data['image_thumb'] = image
+        return self._validate_image_field(image, 'Ảnh bìa')
 
     def clean_image_1(self):
-        return self._validate_image_field(self.cleaned_data.get('image_1'), 'Ảnh chi tiết 1')
+        image = self.cleaned_data.get('image_1')
+        image_1_url = self._get_url_value('image_1_url')
+        if not image and image_1_url:
+            image = download_image_from_url(
+                image_url=image_1_url,
+                field_label='Ảnh chi tiết 1',
+                max_size_bytes=5 * 1024 * 1024,
+                allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+            )
+            self.cleaned_data['image_1'] = image
+        return self._validate_image_field(image, 'Ảnh chi tiết 1')
 
     def clean_image_2(self):
-        return self._validate_image_field(self.cleaned_data.get('image_2'), 'Ảnh chi tiết 2')
+        image = self.cleaned_data.get('image_2')
+        image_2_url = self._get_url_value('image_2_url')
+        if not image and image_2_url:
+            image = download_image_from_url(
+                image_url=image_2_url,
+                field_label='Ảnh chi tiết 2',
+                max_size_bytes=5 * 1024 * 1024,
+                allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+            )
+            self.cleaned_data['image_2'] = image
+        return self._validate_image_field(image, 'Ảnh chi tiết 2')
 
     def _validate_image_field(self, image, field_name):
         """Validate ảnh chung"""

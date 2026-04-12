@@ -17,55 +17,73 @@
                             <select name="category_id" class="form-select" required>
                                 <option value="">-- Chọn danh mục --</option>
                                 {% for category in categories %}
-                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                <option value="{{ category.id }}" {% if form_data.category_id == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Giá bán</label>
-                            <input type="number" min="1000" name="price" class="form-control" required>
+                            <input type="number" min="1000" name="price" class="form-control" value="{{ form_data.price|default:'' }}" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Tài khoản đăng nhập</label>
-                            <input type="text" name="username" class="form-control" required>
+                            <input type="text" name="username" class="form-control" value="{{ form_data.username|default:'' }}" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Mật khẩu</label>
-                            <input type="text" name="password" class="form-control" required>
+                            <input type="text" name="password" class="form-control" value="{{ form_data.password|default:'' }}" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Kiểu đăng nhập</label>
-                            <input type="text" name="login_method" class="form-control" placeholder="Garena/Facebook/Google">
+                            <input type="text" name="login_method" class="form-control" value="{{ form_data.login_method|default:'' }}" placeholder="Garena/Facebook/Google">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Rank</label>
-                            <input type="text" name="rank" class="form-control" placeholder="Ví dụ: Cao thủ">
+                            <input type="text" name="rank" class="form-control" value="{{ form_data.rank|default:'' }}" placeholder="Ví dụ: Cao thủ">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Mô tả tài khoản</label>
-                        <textarea name="details" class="form-control" rows="3" placeholder="Skin, thông tin nổi bật..."></textarea>
+                        <textarea name="details" class="form-control" rows="3" placeholder="Skin, thông tin nổi bật...">{{ form_data.details|default:'' }}</textarea>
                     </div>
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Ảnh bìa</label>
                             <input type="file" name="image_thumb" class="form-control" accept="image/*">
+                            <input type="url" name="image_thumb_url" class="form-control mt-2 js-image-url" value="{{ form_data.image_thumb_url|default:'' }}" placeholder="Hoặc dán link ảnh bìa (https://...)" data-field-label="Ảnh bìa">
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm js-check-image-url">Kiểm tra link</button>
+                            </div>
+                            <div class="form-text js-image-status"></div>
+                            <img class="img-fluid rounded border mt-2 d-none js-image-preview" alt="Xem trước ảnh bìa" style="max-height: 120px; object-fit: cover;" />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Ảnh chi tiết 1</label>
                             <input type="file" name="image_1" class="form-control" accept="image/*">
+                            <input type="url" name="image_1_url" class="form-control mt-2 js-image-url" value="{{ form_data.image_1_url|default:'' }}" placeholder="Hoặc dán link ảnh chi tiết 1 (https://...)" data-field-label="Ảnh chi tiết 1">
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm js-check-image-url">Kiểm tra link</button>
+                            </div>
+                            <div class="form-text js-image-status"></div>
+                            <img class="img-fluid rounded border mt-2 d-none js-image-preview" alt="Xem trước ảnh chi tiết 1" style="max-height: 120px; object-fit: cover;" />
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Ảnh chi tiết 2</label>
                             <input type="file" name="image_2" class="form-control" accept="image/*">
+                            <input type="url" name="image_2_url" class="form-control mt-2 js-image-url" value="{{ form_data.image_2_url|default:'' }}" placeholder="Hoặc dán link ảnh chi tiết 2 (https://...)" data-field-label="Ảnh chi tiết 2">
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm js-check-image-url">Kiểm tra link</button>
+                            </div>
+                            <div class="form-text js-image-status"></div>
+                            <img class="img-fluid rounded border mt-2 d-none js-image-preview" alt="Xem trước ảnh chi tiết 2" style="max-height: 120px; object-fit: cover;" />
                         </div>
                     </div>
 
@@ -75,4 +93,110 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        const form = document.querySelector('form[method="POST"]');
+        if (!form) return;
+
+        const csrfInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+        const validateUrl = "{% url 'seller_validate_image_url' %}";
+
+        function setStatus(container, message, tone) {
+            const statusEl = container.querySelector('.js-image-status');
+            if (!statusEl) return;
+            statusEl.textContent = message || '';
+            statusEl.classList.remove('text-success', 'text-danger', 'text-muted');
+            if (tone === 'success') statusEl.classList.add('text-success');
+            else if (tone === 'error') statusEl.classList.add('text-danger');
+            else statusEl.classList.add('text-muted');
+        }
+
+        function updatePreview(container) {
+            const input = container.querySelector('.js-image-url');
+            const preview = container.querySelector('.js-image-preview');
+            if (!input || !preview) return;
+
+            const url = (input.value || '').trim();
+            if (!url) {
+                preview.classList.add('d-none');
+                preview.removeAttribute('src');
+                setStatus(container, '', 'muted');
+                return;
+            }
+
+            preview.onload = function () {
+                preview.classList.remove('d-none');
+                setStatus(container, 'Đã tải xem trước ảnh thành công.', 'success');
+            };
+            preview.onerror = function () {
+                preview.classList.add('d-none');
+                setStatus(container, 'Không thể xem trước ảnh từ link này.', 'error');
+            };
+            preview.src = url;
+        }
+
+        async function validateOnServer(container) {
+            const input = container.querySelector('.js-image-url');
+            const checkBtn = container.querySelector('.js-check-image-url');
+            if (!input || !checkBtn) return;
+
+            const imageUrl = (input.value || '').trim();
+            const fieldLabel = input.dataset.fieldLabel || 'Ảnh';
+            if (!imageUrl) {
+                setStatus(container, fieldLabel + ': Vui lòng nhập link ảnh.', 'error');
+                return;
+            }
+
+            checkBtn.disabled = true;
+            setStatus(container, 'Đang kiểm tra link trên server...', 'muted');
+            const body = new URLSearchParams();
+            body.append('image_url', imageUrl);
+            body.append('field_label', fieldLabel);
+
+            try {
+                const response = await fetch(validateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: body.toString(),
+                });
+                const payload = await response.json();
+                if (response.ok && payload.ok) {
+                    setStatus(container, payload.message || 'Link ảnh hợp lệ.', 'success');
+                } else {
+                    setStatus(container, (payload && payload.message) || 'Link ảnh không hợp lệ.', 'error');
+                }
+            } catch (error) {
+                setStatus(container, 'Không thể kết nối máy chủ để kiểm tra link.', 'error');
+            } finally {
+                checkBtn.disabled = false;
+            }
+        }
+
+        document.querySelectorAll('.js-image-url').forEach(function (input) {
+            const container = input.closest('.col-md-4');
+            if (!container) return;
+
+            input.addEventListener('input', function () {
+                updatePreview(container);
+            });
+
+            if ((input.value || '').trim()) {
+                updatePreview(container);
+            }
+        });
+
+        document.querySelectorAll('.js-check-image-url').forEach(function (button) {
+            const container = button.closest('.col-md-4');
+            if (!container) return;
+            button.addEventListener('click', function () {
+                validateOnServer(container);
+            });
+        });
+    })();
+</script>
 {% endblock %}

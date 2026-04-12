@@ -1,12 +1,26 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, JsonResponse
+from django.core.exceptions import ValidationError
 from .models import AccountInventory, NickOrder, GameCategory
 from shop_game.minigame.models import Wheel
 from shop_game.core.models import Banner
+from shop_game.core.image_url_utils import download_image_from_url
+
+
+ALLOWED_IMAGE_MIME_TYPES = {
+    'image/jpeg',
+    'image/jpg',
+    'image/pjpeg',
+    'image/png',
+    'image/x-png',
+    'image/gif',
+    'image/webp',
+}
 
 
 def home_view(request):
@@ -142,8 +156,47 @@ def seller_create_account_view(request):
         price = request.POST.get('price')
         rank = request.POST.get('rank')
         details = request.POST.get('details')
+        image_thumb_url = request.POST.get('image_thumb_url', '')
+        image_1_url = request.POST.get('image_1_url', '')
+        image_2_url = request.POST.get('image_2_url', '')
 
         category = get_object_or_404(GameCategory, id=category_id, is_active=True)
+
+        image_thumb_file = request.FILES.get('image_thumb')
+        image_1_file = request.FILES.get('image_1')
+        image_2_file = request.FILES.get('image_2')
+
+        try:
+            if not image_thumb_file and image_thumb_url:
+                image_thumb_file = download_image_from_url(
+                    image_url=image_thumb_url,
+                    field_label='Ảnh bìa',
+                    max_size_bytes=5 * 1024 * 1024,
+                    allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+                )
+
+            if not image_1_file and image_1_url:
+                image_1_file = download_image_from_url(
+                    image_url=image_1_url,
+                    field_label='Ảnh chi tiết 1',
+                    max_size_bytes=5 * 1024 * 1024,
+                    allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+                )
+
+            if not image_2_file and image_2_url:
+                image_2_file = download_image_from_url(
+                    image_url=image_2_url,
+                    field_label='Ảnh chi tiết 2',
+                    max_size_bytes=5 * 1024 * 1024,
+                    allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+                )
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+            categories = GameCategory.objects.filter(is_active=True).order_by('name')
+            return render(request, 'seller_create_account.html', {
+                'categories': categories,
+                'form_data': request.POST,
+            })
 
         AccountInventory.objects.create(
             category=category,
@@ -153,9 +206,9 @@ def seller_create_account_view(request):
             price=price,
             rank=rank,
             details=details,
-            image_thumb=request.FILES.get('image_thumb'),
-            image_1=request.FILES.get('image_1'),
-            image_2=request.FILES.get('image_2'),
+            image_thumb=image_thumb_file,
+            image_1=image_1_file,
+            image_2=image_2_file,
             status='HIDDEN',
             submitted_by=request.user,
             is_approved=False,
@@ -165,3 +218,31 @@ def seller_create_account_view(request):
 
     categories = GameCategory.objects.filter(is_active=True).order_by('name')
     return render(request, 'seller_create_account.html', {'categories': categories})
+
+
+@login_required
+@require_POST
+def seller_validate_image_url_view(request):
+    if not getattr(request.user, 'is_seller', False):
+        return JsonResponse({'ok': False, 'message': 'Bạn chưa được cấp quyền Cộng tác viên/Seller.'}, status=403)
+
+    image_url = (request.POST.get('image_url') or '').strip()
+    field_label = (request.POST.get('field_label') or 'Ảnh').strip()[:80]
+
+    if not image_url:
+        return JsonResponse({'ok': False, 'message': f'{field_label}: Vui lòng nhập link ảnh.'}, status=400)
+
+    try:
+        uploaded = download_image_from_url(
+            image_url=image_url,
+            field_label=field_label,
+            max_size_bytes=5 * 1024 * 1024,
+            allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+        )
+    except ValidationError as exc:
+        return JsonResponse({'ok': False, 'message': str(exc)}, status=400)
+
+    return JsonResponse({
+        'ok': True,
+        'message': f'{field_label}: Link hợp lệ ({uploaded.name}, {uploaded.size} bytes).',
+    })

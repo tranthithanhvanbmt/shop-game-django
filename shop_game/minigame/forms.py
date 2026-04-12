@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Wheel, Reward
+from shop_game.core.image_url_utils import download_image_from_url
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,12 +19,26 @@ ALLOWED_IMAGE_MIME_TYPES = {
 
 class WheelForm(forms.ModelForm):
     """Form cho Wheel với xử lý lỗi image upload"""
+    image_url = forms.URLField(required=False, label="Link ảnh vòng quay")
+
     class Meta:
         model = Wheel
         fields = ['name', 'price', 'image', 'is_active']
 
+    def _get_url_value(self, field_name):
+        return (self.cleaned_data.get(field_name) or self.data.get(field_name) or '').strip()
+
     def clean_image(self):
         image = self.cleaned_data.get('image')
+        image_url = self._get_url_value('image_url')
+        if not image and image_url:
+            image = download_image_from_url(
+                image_url=image_url,
+                field_label='Ảnh vòng quay',
+                max_size_bytes=5 * 1024 * 1024,
+                allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+            )
+            self.cleaned_data['image'] = image
         if image:
             # Kiểm tra kích thước file (max 5MB)
             if image.size > 5 * 1024 * 1024:
@@ -40,12 +55,26 @@ class WheelForm(forms.ModelForm):
 
 class RewardForm(forms.ModelForm):
     """Form cho Reward với xử lý lỗi image upload"""
+    image_url = forms.URLField(required=False, label="Link ảnh phần thưởng")
+
     class Meta:
         model = Reward
         fields = ['wheel', 'name', 'image', 'probability', 'value']
 
+    def _get_url_value(self, field_name):
+        return (self.cleaned_data.get(field_name) or self.data.get(field_name) or '').strip()
+
     def clean_image(self):
         image = self.cleaned_data.get('image')
+        image_url = self._get_url_value('image_url')
+        if not image and image_url:
+            image = download_image_from_url(
+                image_url=image_url,
+                field_label='Ảnh phần thưởng',
+                max_size_bytes=5 * 1024 * 1024,
+                allowed_mime_types=ALLOWED_IMAGE_MIME_TYPES,
+            )
+            self.cleaned_data['image'] = image
         if image:
             # Kiểm tra kích thước file (max 5MB)
             if image.size > 5 * 1024 * 1024:
