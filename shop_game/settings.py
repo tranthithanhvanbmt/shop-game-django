@@ -167,7 +167,7 @@ else:
 if DEBUG:
     _staticfiles_backend = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 else:
-    _staticfiles_backend = 'whitenoise.storage.CompressedStaticFilesStorage'
+    _staticfiles_backend = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 STORAGES = {
     'default': {
